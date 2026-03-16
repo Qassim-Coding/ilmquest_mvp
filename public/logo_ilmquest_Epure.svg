@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 80" width="280" height="80">
+  <defs>
+    <radialGradient id="bg" cx="42%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#1a2a5e"/>
+      <stop offset="100%" stop-color="#06091f"/>
+    </radialGradient>
+    <radialGradient id="moon" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ffe9a0"/>
+      <stop offset="55%" stop-color="#d4a012"/>
+      <stop offset="100%" stop-color="#8a6200"/>
+    </radialGradient>
+    <radialGradient id="star" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#fffbe6"/>
+      <stop offset="50%" stop-color="#EF9F27"/>
+      <stop offset="100%" stop-color="#8a5e00"/>
+    </radialGradient>
+    <linearGradient id="textGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffe9a0"/>
+      <stop offset="100%" stop-color="#d4a012"/>
+    </linearGradient>
+    <clipPath id="ic"><circle cx="40" cy="40" r="34"/></clipPath>
+  </defs>
+
+  <!-- Icône cercle -->
+  <circle cx="40" cy="40" r="34" fill="url(#bg)"/>
+
+  <!-- Étoiles de fond -->
+  <g clip-path="url(#ic)" opacity="0.7">
+    <circle cx="16" cy="14" r="1"   fill="#fffbe6"/>
+    <circle cx="60" cy="12" r="0.8" fill="#fffbe6"/>
+    <circle cx="66" cy="42" r="0.9" fill="#fffbe6"/>
+    <circle cx="14" cy="55" r="0.7" fill="#fffbe6"/>
+    <circle cx="45" cy="68" r="0.8" fill="#fffbe6"/>
+    <circle cx="22" cy="68" r="0.6" fill="#fffbe6"/>
+  </g>
+
+  <!-- Croissant -->
+  <circle cx="36" cy="40" r="20" fill="url(#moon)" clip-path="url(#ic)"/>
+  <circle cx="45" cy="33" r="18" fill="#06091f" clip-path="url(#ic)"/>
+
+  <!-- Étoile -->
+  <g transform="translate(60, 20) rotate(22.5)">
+    <polygon points="0,-10 2.5,-2.5 10,0 2.5,2.5 0,10 -2.5,2.5 -10,0 -2.5,-2.5" fill="url(#star)"/>
+    <circle cx="0" cy="0" r="2.2" fill="#fffbe6"/>
+  </g>
+
+  <!-- Bordure icône -->
+  <circle cx="40" cy="40" r="34" fill="none" stroke="#d4a012" stroke-width="1.2" opacity="0.55"/>
+
+  <!-- Ligne décorative -->
+  <line x1="84" y1="20" x2="84" y2="60" stroke="#d4a012" stroke-width="0.8" opacity="0.35"/>
+
+  <!-- Ilm Quest centré verticalement -->
+  <text x="96" y="46"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="26"
+        font-weight="700"
+        letter-spacing="0.5"
+        fill="url(#textGold)">Ilm</text>
+
+  <text x="140" y="46"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="26"
+        font-weight="700"
+        letter-spacing="0.5"
+        fill="#8b9ec7">Quest</text>
+</svg>
