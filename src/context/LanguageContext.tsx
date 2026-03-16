@@ -16,6 +16,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
+    // Remove legacy key used by the old SettingsContext to prevent stale state.
+    localStorage.removeItem('lang');
     localStorage.setItem('99names_lang', language);
     // Keep document metadata in sync with the active app language.
     document.documentElement.lang = language;
