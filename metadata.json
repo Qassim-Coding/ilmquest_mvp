@@ -1,0 +1,5 @@
+{
+  "name": "IlmQuest",
+  "description": "A modern revision platform for Arabic religious studies, featuring AI-powered quiz generation from text and PDFs, progress tracking, and personalized review.",
+  "requestFramePermissions": []
+}
