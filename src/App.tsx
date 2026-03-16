@@ -13,8 +13,13 @@ import Settings from './components/Settings';
 
 function MainApp() {
   const [activeTab, setActiveTab] = useState<'home' | 'list' | 'flashcards' | 'qcm' | 'challenge' | 'settings'>('home');
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { isDarkMode } = usePreferences();
+  const isDebugUi = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugUi');
+  const debugDir = typeof document !== 'undefined' ? document.documentElement.dir : 'unknown';
+  const debugHtmlLang = typeof document !== 'undefined' ? document.documentElement.lang : 'unknown';
+  const debugLegacyLang = typeof window !== 'undefined' ? localStorage.getItem('lang') ?? 'null' : 'unknown';
+  const debugAppLang = typeof window !== 'undefined' ? localStorage.getItem('99names_lang') ?? 'null' : 'unknown';
 
   const renderContent = () => {
     switch (activeTab) {
@@ -29,6 +34,11 @@ function MainApp() {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 ${isDarkMode ? 'dark bg-stone-950 text-stone-100' : 'bg-stone-50 text-stone-900'}`}>
+      {isDebugUi && (
+        <div className="sticky top-0 z-[70] bg-amber-200 text-amber-950 text-xs px-3 py-1 border-b border-amber-300">
+          debugUi: dir={debugDir} | html.lang={debugHtmlLang} | ctx={language} | 99names_lang={debugAppLang} | legacy lang={debugLegacyLang}
+        </div>
+      )}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-stone-950/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-800">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-primary font-bold text-xl">
