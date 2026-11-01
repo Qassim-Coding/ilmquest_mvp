@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'logo_ilmquest_Epure.svg'],
+        includeAssets: ['icon.svg', 'logo_ilmquest_Epure.svg'],
         manifest: {
           name: 'IlmQuest',
           short_name: 'IlmQuest',
@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
           display: 'standalone',
           icons: [
             {
-              src: 'logo_ilmquest_Epure.svg',
+              src: 'icon.svg',
               sizes: '512x512',
               type: 'image/svg+xml',
               purpose: 'any maskable',
