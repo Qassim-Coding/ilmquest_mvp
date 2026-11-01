@@ -1,65 +1,123 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Search, CheckCircle2 } from 'lucide-react';
+import { Search, Heart } from 'lucide-react';
 import { namesOfAllah } from '../data/names';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
+import { countByLevel, getLevel } from '../lib/learning';
+import { LEVEL_PILL } from '../lib/levelStyles';
 
-export default function NamesList() {
+type ListFilter = 'all' | 'mastered' | 'learning' | 'favorites';
+
+interface NamesListProps {
+  onOpenName: (id: number) => void;
+}
+
+export default function NamesList({ onOpenName }: NamesListProps) {
   const { progress } = useProgress();
   const { language, t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<ListFilter>('all');
 
-  const filteredNames = namesOfAllah.filter(name => 
-    name.transliteration.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    name.meaning[language].toLowerCase().includes(searchTerm.toLowerCase()) ||
-    name.arabic.includes(searchTerm)
-  );
+  const { mastered, learning, toDiscover } = countByLevel(progress);
+  const term = searchTerm.toLowerCase();
+
+  const filteredNames = namesOfAllah.filter(name => {
+    const matchesSearch =
+      name.transliteration.toLowerCase().includes(term) ||
+      name.meaning[language].toLowerCase().includes(term) ||
+      name.arabic.includes(searchTerm);
+    if (!matchesSearch) return false;
+    const level = getLevel(progress, name.id);
+    if (filter === 'mastered') return level === 'mastered';
+    if (filter === 'learning') return level === 'learning' || level === 'familiar';
+    if (filter === 'favorites') return progress.favorites.includes(name.id);
+    return true;
+  });
+
+  const filters: { id: ListFilter; label: string }[] = [
+    { id: 'all', label: t.list.all },
+    { id: 'mastered', label: t.list.mastered },
+    { id: 'learning', label: t.list.learning },
+    { id: 'favorites', label: t.list.favorites },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-stone-800 dark:text-stone-100">{t.list.title}</h1>
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
-          <input
-            type="text"
-            placeholder={t.list.search}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all dark:text-stone-100"
-          />
-        </div>
+    <div className="max-w-xl mx-auto space-y-4">
+      <div className="space-y-1 px-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink">{t.list.title}</h1>
+        <p className="text-sm font-medium text-muted">{t.list.summary(mastered, learning, toDiscover)}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredNames.map((name) => {
-          const isMastered = progress.masteredNames.includes(name.id);
-          
+      <div className="relative">
+        <label htmlFor="names-search" className="sr-only">{t.list.searchLabel}</label>
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={20} aria-hidden="true" />
+        <input
+          id="names-search"
+          type="search"
+          placeholder={t.list.search}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full h-12 pl-12 pr-4 rounded-2xl bg-surface border border-line text-ink placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+        />
+      </div>
+
+      <div role="group" aria-label={t.list.filterLabel} className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {filters.map(item => {
+          const isActive = filter === item.id;
           return (
-            <motion.div
-              key={name.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`p-6 rounded-2xl border transition-all ${
-                isMastered 
-                  ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/30' 
-                  : 'bg-white dark:bg-stone-900 border-stone-100 dark:border-stone-800 hover:border-primary/30'
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setFilter(item.id)}
+              aria-pressed={isActive}
+              className={`shrink-0 h-10 px-3.5 rounded-full border text-sm font-bold transition-colors ${
+                isActive ? 'bg-primary border-primary text-on-primary' : 'bg-surface border-line text-ink hover:bg-track'
               }`}
             >
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-sm font-bold text-stone-400 dark:text-stone-500">#{name.id}</span>
-                {isMastered && <CheckCircle2 className="text-emerald-500" size={20} />}
-              </div>
-              <div className="text-center space-y-2">
-                <h2 className="text-4xl font-bold arabic-text text-primary">{name.arabic}</h2>
-                <h3 className="text-xl font-bold text-stone-800 dark:text-stone-100">{name.transliteration}</h3>
-                <p className="text-stone-600 dark:text-stone-400 text-sm">{name.meaning[language]}</p>
-              </div>
-            </motion.div>
+              {item.label}
+            </button>
           );
         })}
       </div>
+
+      {filteredNames.length === 0 ? (
+        <p className="px-1 py-10 text-center text-muted font-medium">
+          {filter === 'favorites' && searchTerm === '' ? t.list.emptyFavorites : t.list.empty}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {filteredNames.map(name => {
+            const level = getLevel(progress, name.id);
+            const isFavorite = progress.favorites.includes(name.id);
+            return (
+              <li key={name.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenName(name.id)}
+                  className="w-full flex items-center gap-3 min-h-[4.5rem] py-2.5 pl-2.5 pr-4 rounded-2xl bg-surface border border-line text-left hover:border-primary/40 transition-colors"
+                >
+                  <span className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-ground text-sm font-extrabold text-muted">
+                    #{name.id}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-ink truncate">{name.transliteration}</span>
+                      {isFavorite && <Heart size={14} className="shrink-0 fill-danger text-danger" aria-hidden="true" />}
+                    </span>
+                    <span className="block text-sm font-medium text-muted">{name.meaning[language]}</span>
+                  </span>
+                  <span className="flex flex-col items-end gap-1 shrink-0">
+                    <span lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-arabic">{name.arabic}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-extrabold ${LEVEL_PILL[level]}`}>
+                      {t.levels[level]}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

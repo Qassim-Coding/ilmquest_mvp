@@ -1,206 +1,315 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { CheckCircle2, XCircle, ArrowRight, RotateCcw, X } from 'lucide-react';
-import { namesOfAllah } from '../data/names';
-import { DivineName } from '../types';
+import { Check, X, ArrowRight, RotateCcw, Zap, Timer } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useProgress } from '../context/ProgressContext';
+import { buildOptions, getNameById, QuizOption, XP_PER_CORRECT } from '../lib/learning';
+import { AnswerRecord, DivineName, ReviewMode } from '../types';
+import QuizResults from './QuizResults';
+
+const TIMED_SECONDS = 60;
+const TIMED_BONUS_SECONDS = 2;
+const LETTERS = ['A', 'B', 'C', 'D'];
 
 interface QuizEngineProps {
-  mode: 'practice' | 'challenge';
-  count: number;
+  kind: 'practice' | 'challenge';
+  mode: ReviewMode;
+  /** Noms à interroger, dans l'ordre (déjà tirés au hasard par l'écran appelant) */
+  questionIds: number[];
+  /** Défi « Contre la montre » : 60 s, +2 s par bonne réponse */
+  timed?: boolean;
   onComplete?: (score: number, total: number) => void;
   onStop: () => void;
+  onRestart: () => void;
+  onReviewMistakes: (ids: number[]) => void;
 }
 
-export default function QuizEngine({ mode, count, onComplete, onStop }: QuizEngineProps) {
+export default function QuizEngine({
+  kind,
+  mode,
+  questionIds,
+  timed = false,
+  onComplete,
+  onStop,
+  onRestart,
+  onReviewMistakes,
+}: QuizEngineProps) {
   const { language, t } = useLanguage();
-  const [questions, setQuestions] = useState<DivineName[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [options, setOptions] = useState<string[]>([]);
-  const [selectedAnswer, setSelectedAnswer] = useState<number>(-1);
-  const [score, setScore] = useState(0);
-  const [isFinished, setIsFinished] = useState(false);
+  const { progress, recordAnswer } = useProgress();
+  const questions = useMemo(
+    () => questionIds.map(id => getNameById(id)).filter((name): name is DivineName => name !== undefined),
+    [questionIds]
+  );
+  const reverse = mode === 'reverse';
 
-  const initQuiz = () => {
-    let selectedNames = [...namesOfAllah].sort(() => 0.5 - Math.random()).slice(0, count);
-    setQuestions(selectedNames);
-    setCurrentIndex(0);
-    setScore(0);
-    setIsFinished(false);
-    generateOptions(selectedNames[0]);
-  };
+  const [index, setIndex] = useState(0);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [answers, setAnswers] = useState<AnswerRecord[]>([]);
+  const [combo, setCombo] = useState(0);
+  const [xpGained, setXpGained] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(TIMED_SECONDS);
+  const [isFinished, setIsFinished] = useState(false);
+  // État de départ, pour comparer en fin de QCM (noms acquis, badges)
+  const [start] = useState(() => ({ mastered: progress.masteredNames.length, badges: progress.earnedBadges }));
+  const reported = useRef(false);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+
+  const current = questions[index];
+  const score = answers.filter(answer => answer.correct).length;
+  const total = timed ? answers.length : questions.length;
+
+  // Nouvelles réponses à chaque question (et si la langue change)
+  const options: QuizOption[] = useMemo(
+    () => (current ? buildOptions(current, reverse, language) : []),
+    [current?.id, reverse, language]
+  );
+
+  // Chrono du défi « Contre la montre »
+  useEffect(() => {
+    if (!timed || isFinished) return;
+    const timer = window.setInterval(() => setTimeLeft(seconds => Math.max(0, seconds - 1)), 1000);
+    return () => window.clearInterval(timer);
+  }, [timed, isFinished]);
 
   useEffect(() => {
-    initQuiz();
-  }, [count, mode]);
+    if (timed && timeLeft <= 0 && !isFinished) setIsFinished(true);
+  }, [timed, timeLeft, isFinished]);
 
-  const generateOptions = (correctName: DivineName) => {
-    if (!correctName) return;
-    // Certains noms partagent le même sens (ex. « L’Unique » pour 97 et 98).
-    // On écarte tout sens identique à la bonne réponse ou déjà proposé,
-    // pour ne jamais afficher deux boutons avec le même texte.
-    const normalize = (text: string) => text.trim().toLowerCase();
-    const correctMeaning = correctName.meaning[language];
-    const usedMeanings = new Set([normalize(correctMeaning)]);
-    const wrongOptions: string[] = [];
-    for (const n of [...namesOfAllah].sort(() => 0.5 - Math.random())) {
-      const meaning = n.meaning[language];
-      if (n.id === correctName.id || usedMeanings.has(normalize(meaning))) continue;
-      usedMeanings.add(normalize(meaning));
-      wrongOptions.push(meaning);
-      if (wrongOptions.length === 3) break;
+  // Le score est transmis une seule fois, avec toutes les réponses (y compris la dernière)
+  useEffect(() => {
+    if (isFinished && !reported.current) {
+      reported.current = true;
+      onComplete?.(score, total);
     }
+  }, [isFinished]);
 
-    const allOptions = [...wrongOptions, correctMeaning].sort(() => 0.5 - Math.random());
-    setOptions(allOptions);
-    setSelectedAnswer(-1);
-  };
-
-  const handleSelect = (index: number) => {
-    if (selectedAnswer !== -1) return; // Already answered
-    setSelectedAnswer(index);
-    if (options[index] === questions[currentIndex].meaning[language]) {
-      setScore(s => s + 1);
+  // Fait apparaître le résultat et le bouton « Suivant » au-dessus de la barre d'onglets
+  useEffect(() => {
+    if (selectedId !== null && !timed) {
+      feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  };
+  }, [selectedId, timed]);
 
-  const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      generateOptions(questions[nextIndex]);
+  const goNext = () => {
+    if (index < questions.length - 1) {
+      setIndex(i => i + 1);
+      setSelectedId(null);
     } else {
       setIsFinished(true);
-      if (onComplete) {
-        // score contient déjà la dernière réponse (ajoutée dans handleSelect) :
-        // l'ancien code la comptait une deuxième fois.
-        onComplete(score, questions.length);
-      }
+    }
+  };
+
+  const handleSelect = (option: QuizOption) => {
+    if (selectedId !== null || isFinished || !current) return;
+    const correct = option.id === current.id;
+    setSelectedId(option.id);
+    recordAnswer(current.id, correct, correct ? XP_PER_CORRECT : 0);
+    setAnswers(previous => [...previous, { id: current.id, correct }]);
+    setCombo(value => (correct ? value + 1 : 0));
+    if (correct) setXpGained(value => value + XP_PER_CORRECT);
+    if (timed) {
+      if (correct) setTimeLeft(seconds => seconds + TIMED_BONUS_SECONDS);
+      window.setTimeout(goNext, 650);
     }
   };
 
   if (questions.length === 0) return null;
 
   if (isFinished) {
-    const percentage = Math.round((score / questions.length) * 100);
+    const label = kind === 'challenge' ? t.challenge.title : t.qcm.modes[mode].label;
     return (
-      <div className="max-w-2xl mx-auto text-center space-y-8 py-10">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="space-y-4"
-        >
-          <div className="text-6xl font-black text-primary">{percentage}%</div>
-          <h2 className="text-3xl font-bold text-stone-800 dark:text-stone-100">{t.qcm.finalScore}</h2>
-          <p className="text-stone-500 text-lg">{score} {t.qcm.correctAnswers} {questions.length}</p>
-        </motion.div>
-
-        <div className="flex flex-col gap-4">
-          <button
-            onClick={initQuiz}
-            className="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all flex items-center justify-center gap-2"
-          >
-            <RotateCcw size={18} />
-            <span>{t.qcm.restart}</span>
-          </button>
-          <button
-            onClick={onStop}
-            className="w-full py-4 bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 rounded-xl font-bold hover:bg-stone-300 dark:hover:bg-stone-700 transition-all flex items-center justify-center gap-2"
-          >
-            <X size={18} />
-            <span>{t.qcm.stop}</span>
-          </button>
-        </div>
-      </div>
+      <QuizResults
+        label={label}
+        timed={timed}
+        answers={answers}
+        total={total}
+        xpGained={xpGained}
+        masteredBefore={start.mastered}
+        badgesBefore={start.badges}
+        onRestart={onRestart}
+        onReviewMistakes={onReviewMistakes}
+        onBack={onStop}
+      />
     );
   }
 
-  const currentQuestion = questions[currentIndex];
+  const hasAnswered = selectedId !== null;
+  const isCorrect = hasAnswered && selectedId === current.id;
+  const isLast = index === questions.length - 1;
+  const modeLabel = kind === 'challenge' ? (timed ? t.challenge.timed : t.challenge.title) : t.qcm.modes[mode].label;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 pb-20">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-primary uppercase tracking-wider">
-          {mode === 'challenge' ? t.qcm.challengeMode : t.qcm.classicMode}
-        </h3>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-stone-800 dark:text-stone-100">{t.qcm.question} {currentIndex + 1}</span>
-            <span className="text-stone-400 dark:text-stone-500">/ {questions.length}</span>
-          </div>
-          <button 
-            onClick={onStop}
-            className="p-2 -mr-2 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
-            title={t.qcm.stop}
-          >
-            <X size={24} />
-          </button>
-        </div>
-      </div>
-
-      <div className="w-full bg-stone-200 dark:bg-stone-800 h-2 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-          className="bg-primary h-full"
-        />
-      </div>
-
-      <div className="space-y-6">
-        <div className="p-8 bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm text-center">
-          <h2 className="text-4xl md:text-6xl font-bold arabic-text text-primary mb-4">
-            {currentQuestion.arabic}
-          </h2>
-          <p className="text-xl text-stone-600 dark:text-stone-400 font-medium">
-            {currentQuestion.transliteration}
-          </p>
-          <p className="mt-6 text-stone-500 font-medium">{t.qcm.meaningQuestion}</p>
-        </div>
-
-        <div className="grid gap-4">
-          {options.map((option, idx) => {
-            const isSelected = selectedAnswer === idx;
-            const isCorrect = option === currentQuestion.meaning[language];
-            const showResult = selectedAnswer !== -1;
-
-            let stateClasses = 'border-stone-100 dark:border-stone-800 hover:border-primary/30 hover:bg-stone-50 dark:hover:bg-stone-800/50';
-            
-            if (showResult) {
-              if (isCorrect) stateClasses = 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400';
-              else if (isSelected) stateClasses = 'border-red-500 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400';
-              else stateClasses = 'opacity-50 border-stone-100 dark:border-stone-800';
-            }
-
-            return (
-              <button
-                key={idx}
-                onClick={() => handleSelect(idx)}
-                disabled={showResult}
-                className={`w-full p-5 rounded-2xl border-2 text-left transition-all flex items-center justify-between gap-4 ${stateClasses}`}
-              >
-                <span className="font-bold text-lg">{option}</span>
-                {showResult && isCorrect && <CheckCircle2 className="text-emerald-500 shrink-0" size={24} />}
-                {showResult && isSelected && !isCorrect && <XCircle className="text-red-500 shrink-0" size={24} />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-end pt-6">
+    <div className="max-w-xl mx-auto space-y-4">
+      {/* Barre du haut : quitter, progression ou chrono */}
+      <div className="flex items-center gap-3">
         <button
-          onClick={handleNext}
-          disabled={selectedAnswer === -1}
-          className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all ${
-            selectedAnswer === -1
-              ? 'bg-stone-200 dark:bg-stone-800 text-stone-400 dark:text-stone-600 cursor-not-allowed'
-              : 'bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary-hover'
-          }`}
+          type="button"
+          onClick={onStop}
+          aria-label={t.qcm.stop}
+          title={t.qcm.stop}
+          className="flex items-center justify-center w-11 h-11 -ml-2 shrink-0 rounded-full text-muted hover:bg-track"
         >
-          <span>{currentIndex === questions.length - 1 ? t.qcm.finish : t.qcm.next}</span>
-          <ArrowRight size={20} />
+          <X size={24} />
         </button>
+        {timed ? (
+          <div className="flex-1 h-2 rounded-full bg-track overflow-hidden" aria-hidden="true">
+            <div
+              className="h-full rounded-full bg-accent transition-all duration-1000 ease-linear"
+              style={{ width: `${Math.min(100, (timeLeft / TIMED_SECONDS) * 100)}%` }}
+            />
+          </div>
+        ) : questions.length <= 20 ? (
+          <div className="flex-1 flex gap-1" aria-hidden="true">
+            {questions.map((question, i) => (
+              <div
+                key={question.id}
+                className={`flex-1 h-2 rounded-full ${
+                  i < answers.length ? (answers[i].correct ? 'bg-primary' : 'bg-danger') : i === index ? 'bg-accent' : 'bg-track'
+                }`}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex-1 h-2 rounded-full bg-track overflow-hidden" aria-hidden="true">
+            <motion.div
+              initial={false}
+              animate={{ width: `${((index + 1) / questions.length) * 100}%` }}
+              className="h-full bg-primary"
+            />
+          </div>
+        )}
+        <span className="shrink-0 flex items-center gap-1 text-sm font-extrabold text-muted">
+          {timed ? (
+            <>
+              <Timer size={16} />
+              {t.challenge.timeLeft(timeLeft)}
+            </>
+          ) : (
+            `${index + 1} / ${questions.length}`
+          )}
+        </span>
       </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <span className="px-3 py-1.5 rounded-full bg-soft text-soft-ink text-xs font-extrabold uppercase tracking-wide">
+          {modeLabel}
+        </span>
+        {combo >= 2 && (
+          <span className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-accent-soft text-accent-ink text-sm font-extrabold">
+            <Zap size={14} className="fill-accent text-accent" />
+            {t.qcm.combo(combo)}
+          </span>
+        )}
+      </div>
+
+      {/* Question */}
+      <section className="relative overflow-hidden rounded-3xl bg-surface border border-line px-5 py-7 text-center">
+        <svg viewBox="0 0 24 24" className="absolute -left-8 -bottom-9 w-28 h-28 fill-ground" aria-hidden="true">
+          <rect x="5" y="5" width="14" height="14" rx="1.5" />
+          <rect x="5" y="5" width="14" height="14" rx="1.5" transform="rotate(45 12 12)" />
+        </svg>
+        {reverse ? (
+          <>
+            <p className="relative text-3xl font-extrabold text-ink">{current.meaning[language]}</p>
+            <p className="relative mt-4 font-semibold text-muted">{t.qcm.reverseQuestion}</p>
+          </>
+        ) : (
+          <>
+            <p lang="ar" dir="rtl" className="relative arabic-text text-6xl font-bold text-arabic">{current.arabic}</p>
+            <p className="relative text-xl font-extrabold text-ink">{current.transliteration}</p>
+            <p className="relative mt-4 font-semibold text-muted">{t.qcm.meaningQuestion}</p>
+          </>
+        )}
+      </section>
+
+      {/* Réponses */}
+      <div className="space-y-2.5">
+        {options.map((option, i) => {
+          const isAnswer = option.id === current.id;
+          const isSelected = option.id === selectedId;
+          let state = 'bg-surface border-line text-ink hover:border-primary/40';
+          let letter = 'bg-ground text-muted';
+          if (hasAnswered && isAnswer) {
+            state = 'bg-soft border-primary text-soft-ink';
+            letter = 'bg-primary text-on-primary';
+          } else if (hasAnswered && isSelected) {
+            state = 'bg-danger-soft border-danger text-danger-ink';
+            letter = 'bg-danger text-on-danger';
+          } else if (hasAnswered) {
+            state = 'bg-surface border-line text-ink opacity-50';
+          }
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => handleSelect(option)}
+              disabled={hasAnswered}
+              className={`w-full flex items-center gap-3 min-h-[3.75rem] py-2 pl-2 pr-4 rounded-2xl border-2 text-left transition-colors ${state}`}
+            >
+              <span className={`flex items-center justify-center w-10 h-10 shrink-0 rounded-xl text-sm font-extrabold ${letter}`}>
+                {LETTERS[i]}
+              </span>
+              {option.arabic ? (
+                <span className="flex-1 min-w-0 flex items-center justify-between gap-3">
+                  <span className="font-bold">{option.label}</span>
+                  <span lang="ar" dir="rtl" className="arabic-text text-2xl font-bold">{option.arabic}</span>
+                </span>
+              ) : (
+                <span className="flex-1 font-bold text-lg">{option.label}</span>
+              )}
+              {hasAnswered && isAnswer && <Check size={22} className="shrink-0" />}
+              {hasAnswered && isSelected && !isAnswer && <X size={22} className="shrink-0" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Résultat de la question (le chrono passe tout seul à la suivante) */}
+      {hasAnswered && !timed && (
+        <motion.div
+          ref={feedbackRef}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          role="status"
+          className={`rounded-3xl p-4 space-y-3 scroll-mb-28 ${isCorrect ? 'bg-soft' : 'bg-danger-soft'}`}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className={`flex items-center justify-center w-10 h-10 shrink-0 rounded-full ${
+                isCorrect ? 'bg-primary text-on-primary' : 'bg-danger text-on-danger'
+              }`}
+            >
+              {isCorrect ? <Check size={22} /> : <RotateCcw size={20} />}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className={`text-xl font-extrabold ${isCorrect ? 'text-soft-ink' : 'text-danger-ink'}`}>
+                {isCorrect ? t.qcm.correctTitle : t.qcm.wrongTitle}
+              </p>
+              <p className={`text-sm font-semibold ${isCorrect ? 'text-soft-ink' : 'text-danger-ink'}`}>
+                {isCorrect
+                  ? `${current.transliteration} · ${current.meaning[language]}`
+                  : t.qcm.rightAnswer(reverse ? current.transliteration : current.meaning[language])}
+              </p>
+            </div>
+            {isCorrect && (
+              <span className="shrink-0 px-2.5 py-1 rounded-full bg-accent-soft text-accent-ink text-sm font-extrabold">
+                +{XP_PER_CORRECT} {t.xp}
+              </span>
+            )}
+          </div>
+          {!isCorrect && <p className="text-sm font-medium text-danger-ink">{t.qcm.addedToMistakes}</p>}
+          <button
+            type="button"
+            onClick={goNext}
+            className={`w-full flex items-center justify-center gap-2 h-14 rounded-2xl font-extrabold ${
+              isCorrect ? 'bg-primary text-on-primary hover:bg-primary-hover' : 'bg-danger text-on-danger'
+            }`}
+          >
+            {isLast ? t.qcm.finish : t.qcm.next}
+            <ArrowRight size={20} />
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 }

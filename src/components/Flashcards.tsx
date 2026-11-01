@@ -1,152 +1,198 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { RotateCcw, ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { RotateCcw, ArrowLeft, ArrowLeftRight, Check } from 'lucide-react';
 import { namesOfAllah } from '../data/names';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
+import { getLevel, XP_PER_CARD } from '../lib/learning';
 import { FlashcardSide } from '../types';
+import { LEVEL_PILL } from '../lib/levelStyles';
 
-export default function Flashcards() {
-  const { progress, markAsMastered, unmarkAsMastered } = useProgress();
+interface FlashcardsProps {
+  /** Nom à afficher en premier (depuis « Voir en carte » sur une fiche) */
+  startId?: number | null;
+}
+
+const SIDES: FlashcardSide[] = ['arabic', 'transliteration', 'meaning'];
+
+export default function Flashcards({ startId = null }: FlashcardsProps) {
+  const { progress, recordAnswer } = useProgress();
   const { language, t } = useLanguage();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    const index = startId === null ? -1 : namesOfAllah.findIndex(name => name.id === startId);
+    return index >= 0 ? index : 0;
+  });
   const [isFlipped, setIsFlipped] = useState(false);
   const [frontSide, setFrontSide] = useState<FlashcardSide>('arabic');
   const [backSide, setBackSide] = useState<FlashcardSide>('meaning');
 
   const currentName = namesOfAllah[currentIndex];
-  const isMastered = progress.masteredNames.includes(currentName.id);
+  const level = getLevel(progress, currentName.id);
+  // Au verso, on montre aussi le côté qui n'est ni au recto ni au verso (ex. la translittération)
+  const extraSide = SIDES.find(side => side !== frontSide && side !== backSide);
 
-  const handleNext = () => {
+  const goTo = (index: number) => {
     setIsFlipped(false);
-    if (currentIndex < namesOfAllah.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
+    setCurrentIndex((index + namesOfAllah.length) % namesOfAllah.length);
   };
 
-  const handlePrev = () => {
+  // « Je le savais » / « À revoir » : la maîtrise du nom monte ou descend, puis carte suivante
+  const answer = (knew: boolean) => {
+    recordAnswer(currentName.id, knew, knew ? XP_PER_CARD : 0);
+    goTo(currentIndex + 1);
+  };
+
+  const swapSides = () => {
+    setFrontSide(backSide);
+    setBackSide(frontSide);
     setIsFlipped(false);
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
   };
 
-  const toggleMastered = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isMastered) {
-      unmarkAsMastered(currentName.id);
-    } else {
-      markAsMastered(currentName.id);
-    }
-  };
-
-  const renderSide = (side: FlashcardSide) => {
+  const renderSide = (side: FlashcardSide, onHero: boolean) => {
     switch (side) {
       case 'arabic':
-        return <h2 className="text-5xl md:text-7xl font-bold arabic-text leading-relaxed">{currentName.arabic}</h2>;
+        return (
+          <p lang="ar" dir="rtl" className={`arabic-text text-6xl md:text-7xl font-bold ${onHero ? 'text-on-hero' : 'text-arabic'}`}>
+            {currentName.arabic}
+          </p>
+        );
       case 'transliteration':
-        return <h2 className="text-3xl md:text-5xl font-bold">{currentName.transliteration}</h2>;
+        return <p className={`text-3xl md:text-5xl font-extrabold ${onHero ? 'text-on-hero' : 'text-ink'}`}>{currentName.transliteration}</p>;
       case 'meaning':
-        return <h2 className="text-2xl md:text-4xl font-medium text-center px-4">{currentName.meaning[language]}</h2>;
+        return <p className={`text-2xl md:text-4xl font-extrabold px-4 ${onHero ? 'text-on-hero' : 'text-ink'}`}>{currentName.meaning[language]}</p>;
     }
   };
 
+  const renderExtra = (side: FlashcardSide) => {
+    if (side === 'arabic') {
+      return <p lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-hero-muted">{currentName.arabic}</p>;
+    }
+    return (
+      <p className="text-lg font-semibold text-hero-muted">
+        {side === 'transliteration' ? currentName.transliteration : currentName.meaning[language]}
+      </p>
+    );
+  };
+
+  const sideOptions = (
+    <>
+      <option value="arabic">{t.cards.arabic}</option>
+      <option value="transliteration">{t.cards.transliteration}</option>
+      <option value="meaning">{t.cards.meaning}</option>
+    </>
+  );
+
   return (
-    <div className="max-w-3xl mx-auto space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-stone-900 p-4 rounded-2xl shadow-sm border border-stone-100 dark:border-stone-800">
-        <div className="flex items-center gap-2 text-sm font-medium text-stone-600 dark:text-stone-400">
-          <span>{t.cards.front}</span>
-          <select 
-            value={frontSide} 
-            onChange={(e) => setFrontSide(e.target.value as FlashcardSide)}
-            className="bg-stone-100 dark:bg-stone-800 rounded-lg px-2 py-1 outline-none"
-          >
-            <option value="arabic">{t.cards.arabic}</option>
-            <option value="transliteration">{t.cards.transliteration}</option>
-            <option value="meaning">{t.cards.meaning}</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2 text-sm font-medium text-stone-600 dark:text-stone-400">
-          <span>{t.cards.back}</span>
-          <select 
-            value={backSide} 
-            onChange={(e) => setBackSide(e.target.value as FlashcardSide)}
-            className="bg-stone-100 dark:bg-stone-800 rounded-lg px-2 py-1 outline-none"
-          >
-            <option value="arabic">{t.cards.arabic}</option>
-            <option value="transliteration">{t.cards.transliteration}</option>
-            <option value="meaning">{t.cards.meaning}</option>
-          </select>
-        </div>
-      </div>
+    <div className="max-w-xl mx-auto space-y-4">
+      <h1 className="px-1 text-3xl font-extrabold tracking-tight text-ink">{t.nav.cards}</h1>
 
-      <div className="flex items-center justify-between px-2">
-        <span className="text-stone-500 font-medium">{t.cards.name} {currentIndex + 1} / 99</span>
-        <button 
-          onClick={toggleMastered}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
-            isMastered 
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
-              : 'bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-400 hover:bg-stone-300'
-          }`}
+      {/* Recto / verso */}
+      <div className="flex items-end gap-2">
+        <div className="flex-1 min-w-0 space-y-1">
+          <label htmlFor="card-front" className="block px-1 text-xs font-bold text-muted">{t.cards.frontLabel}</label>
+          <select
+            id="card-front"
+            value={frontSide}
+            onChange={(e) => { setFrontSide(e.target.value as FlashcardSide); setIsFlipped(false); }}
+            className="w-full h-11 px-3 rounded-xl bg-surface border border-line text-sm font-bold text-ink outline-none focus:border-primary"
+          >
+            {sideOptions}
+          </select>
+        </div>
+        <button
+          type="button"
+          onClick={swapSides}
+          aria-label={t.cards.swap}
+          className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-soft text-soft-ink"
         >
-          <CheckCircle2 size={18} />
-          {isMastered ? t.cards.mastered : t.cards.markMastered}
+          <ArrowLeftRight size={20} />
         </button>
+        <div className="flex-1 min-w-0 space-y-1">
+          <label htmlFor="card-back" className="block px-1 text-xs font-bold text-muted">{t.cards.backLabel}</label>
+          <select
+            id="card-back"
+            value={backSide}
+            onChange={(e) => { setBackSide(e.target.value as FlashcardSide); setIsFlipped(false); }}
+            className="w-full h-11 px-3 rounded-xl bg-surface border border-line text-sm font-bold text-ink outline-none focus:border-primary"
+          >
+            {sideOptions}
+          </select>
+        </div>
       </div>
 
-      <div className="w-full bg-stone-200 dark:bg-stone-800 h-2 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${((currentIndex + 1) / 99) * 100}%` }}
-          className="bg-primary h-full"
-        />
+      {/* Position et maîtrise */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="font-bold text-muted">{t.cards.name} {currentIndex + 1} / 99</span>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${LEVEL_PILL[level]}`}>{t.levels[level]}</span>
+        </div>
+        <div className="w-full h-2 rounded-full bg-track overflow-hidden">
+          <motion.div
+            initial={false}
+            animate={{ width: `${((currentIndex + 1) / 99) * 100}%` }}
+            className="h-full bg-primary"
+          />
+        </div>
       </div>
 
-      <div 
-        className="relative w-full aspect-[4/3] md:aspect-[16/9] perspective-1000 cursor-pointer group"
+      {/* Carte : toucher pour la retourner */}
+      <button
+        type="button"
         onClick={() => setIsFlipped(!isFlipped)}
+        aria-label={t.cards.flip}
+        className="relative block w-full aspect-[4/3] perspective-1000"
       >
         <motion.div
-          className="w-full h-full relative preserve-3d transition-all duration-500"
+          className="w-full h-full relative preserve-3d"
+          initial={false}
           animate={{ rotateY: isFlipped ? 180 : 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {/* Front */}
-          <div className="absolute inset-0 backface-hidden p-8 bg-white dark:bg-stone-900 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-xl flex flex-col items-center justify-center text-center">
-            {renderSide(frontSide)}
-            <p className="absolute bottom-6 text-stone-400 dark:text-stone-500 text-sm font-medium flex items-center gap-2">
+          <div className="absolute inset-0 backface-hidden p-6 rounded-[1.75rem] bg-surface border border-line shadow-lg flex flex-col items-center justify-center text-center">
+            {renderSide(frontSide, false)}
+            <p className="absolute bottom-5 flex items-center gap-2 text-sm font-semibold text-muted">
               <RotateCcw size={16} />
               {t.cards.clickToFlip}
             </p>
           </div>
-
-          {/* Back */}
-          <div 
-            className="absolute inset-0 backface-hidden p-8 bg-primary rounded-3xl shadow-xl flex flex-col items-center justify-center text-center text-white"
+          <div
+            className="absolute inset-0 backface-hidden p-6 rounded-[1.75rem] bg-hero shadow-lg flex flex-col items-center justify-center gap-2 text-center"
             style={{ transform: 'rotateY(180deg)' }}
           >
-            {renderSide(backSide)}
+            {renderSide(backSide, true)}
+            {extraSide && renderExtra(extraSide)}
           </div>
         </motion.div>
+      </button>
+
+      {/* Auto-évaluation */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => answer(false)}
+          className="flex items-center justify-center gap-2 h-14 rounded-2xl bg-danger-soft text-danger-ink font-extrabold"
+        >
+          <RotateCcw size={20} />
+          {t.cards.toReview}
+        </button>
+        <button
+          type="button"
+          onClick={() => answer(true)}
+          className="flex items-center justify-center gap-2 h-14 rounded-2xl bg-primary text-on-primary font-extrabold hover:bg-primary-hover transition-colors"
+        >
+          <Check size={20} />
+          {t.cards.iKnew}
+        </button>
       </div>
 
-      <div className="flex items-center justify-between pt-6">
+      <div className="flex justify-center">
         <button
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-          className="flex items-center gap-2 px-6 py-4 rounded-xl font-bold text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800 disabled:opacity-0 transition-all"
+          type="button"
+          onClick={() => goTo(currentIndex - 1)}
+          className="flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-bold text-muted hover:bg-track"
         >
-          <ArrowLeft size={20} />
-          <span>{t.cards.prev}</span>
-        </button>
-
-        <button
-          onClick={handleNext}
-          disabled={currentIndex === namesOfAllah.length - 1}
-          className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary-hover disabled:opacity-0 transition-all"
-        >
-          <span>{t.cards.next}</span>
-          <ArrowRight size={20} />
+          <ArrowLeft size={18} />
+          {t.cards.prev}
         </button>
       </div>
     </div>

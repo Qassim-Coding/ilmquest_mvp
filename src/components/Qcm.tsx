@@ -1,52 +1,171 @@
 import React, { useState } from 'react';
-import { Play } from 'lucide-react';
+import { Play, BookOpen, ArrowLeftRight, Repeat, XCircle, Heart } from 'lucide-react';
 import QuizEngine from './QuizEngine';
 import { useLanguage } from '../context/LanguageContext';
+import { useProgress } from '../context/ProgressContext';
+import { getDueIds, getPool, pickQuestionIds, QUESTION_COUNTS, shuffle } from '../lib/learning';
+import { QcmPreset, ReviewMode } from '../types';
 
-export default function Qcm() {
+interface QcmProps {
+  /** Réglages de départ (depuis l'Accueil ou une fiche). Avec fixedIds, le QCM démarre directement. */
+  preset?: QcmPreset | null;
+}
+
+interface Session {
+  key: number;
+  mode: ReviewMode;
+  ids: number[];
+  /** true : liste imposée (ex. « Réviser ce nom »), « Recommencer » reprend la même liste */
+  fixed: boolean;
+}
+
+const MODE_ICONS: Record<ReviewMode, typeof BookOpen> = {
+  classic: BookOpen,
+  reverse: ArrowLeftRight,
+  smart: Repeat,
+  mistakes: XCircle,
+  favorites: Heart,
+};
+
+const MODES: ReviewMode[] = ['classic', 'reverse', 'smart', 'mistakes', 'favorites'];
+
+export default function Qcm({ preset = null }: QcmProps) {
   const { t } = useLanguage();
-  const [isStarted, setIsStarted] = useState(false);
-  const [questionCount, setQuestionCount] = useState(10);
+  const { progress } = useProgress();
+  const [mode, setMode] = useState<ReviewMode>(preset?.mode ?? 'classic');
+  const [count, setCount] = useState(10);
+  const [session, setSession] = useState<Session | null>(() =>
+    preset?.fixedIds && preset.fixedIds.length > 0
+      ? { key: Date.now(), mode: preset.mode, ids: preset.fixedIds, fixed: true }
+      : null
+  );
 
-  if (isStarted) {
-    return <QuizEngine mode="practice" count={questionCount} onStop={() => setIsStarted(false)} />;
+  const dueCount = getDueIds(progress).length;
+  const poolSize = getPool(mode, progress).length;
+  const questionCount = Math.min(count, poolSize);
+
+  const startSession = (sessionMode: ReviewMode, ids: number[], fixed: boolean) => {
+    if (ids.length === 0) return;
+    setSession({ key: Date.now(), mode: sessionMode, ids, fixed });
+  };
+
+  if (session) {
+    return (
+      <QuizEngine
+        key={session.key}
+        kind="practice"
+        mode={session.mode}
+        questionIds={session.ids}
+        onStop={() => setSession(null)}
+        onRestart={() =>
+          session.fixed
+            ? startSession(session.mode, shuffle(session.ids), true)
+            : startSession(session.mode, pickQuestionIds(session.mode, count, progress), false)
+        }
+        onReviewMistakes={(ids) => startSession('classic', shuffle(ids), true)}
+      />
+    );
   }
 
+  const subtitleFor = (item: ReviewMode) => {
+    switch (item) {
+      case 'smart': return t.qcm.modeSub.smart(dueCount);
+      case 'mistakes': return t.qcm.modeSub.mistakes(progress.mistakes.length);
+      case 'favorites': return t.qcm.modeSub.favorites(progress.favorites.length);
+      default: return t.qcm.modeSub[item];
+    }
+  };
+
+  const helper =
+    mode === 'smart' ? t.qcm.helper.smart
+      : mode === 'mistakes' ? t.qcm.helper.mistakes(poolSize)
+      : mode === 'favorites' ? t.qcm.helper.favorites(poolSize)
+      : t.qcm.helper.all;
+
   return (
-    <div className="max-w-2xl mx-auto space-y-12 pb-20">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-stone-800 dark:text-stone-100">{t.qcm.title}</h1>
-        <p className="text-stone-500 text-lg">{t.qcm.subtitle}</p>
+    <div className="max-w-xl mx-auto space-y-4">
+      <div className="space-y-1 px-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink">{t.qcm.title}</h1>
+        <p className="font-medium text-muted">{t.qcm.subtitle}</p>
       </div>
 
-      <div className="bg-white dark:bg-stone-900 rounded-3xl p-8 border border-stone-100 dark:border-stone-800 shadow-sm space-y-8">
-        <div className="space-y-4">
-          <h3 className="text-xl font-bold text-stone-800 dark:text-stone-100">{t.challenge.chooseCount}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {[10, 20, 30, 50, 99].map(count => (
-              <button
-                key={count}
-                onClick={() => setQuestionCount(count)}
-                className={`p-4 rounded-2xl font-bold transition-all ${
-                  questionCount === count
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+      {/* Modes de révision */}
+      <div role="radiogroup" aria-label={t.qcm.subtitle} className="space-y-2">
+        {MODES.map(item => {
+          const Icon = MODE_ICONS[item];
+          const isActive = mode === item;
+          return (
+            <button
+              key={item}
+              type="button"
+              role="radio"
+              aria-checked={isActive}
+              onClick={() => setMode(item)}
+              className={`w-full flex items-center gap-3 min-h-[3.75rem] py-2 pl-2.5 pr-4 rounded-2xl border-2 text-left transition-colors ${
+                isActive ? 'bg-soft/60 border-primary' : 'bg-surface border-line'
+              }`}
+            >
+              <span
+                className={`flex items-center justify-center w-10 h-10 shrink-0 rounded-xl ${
+                  isActive ? 'bg-primary text-on-primary' : 'bg-ground text-muted'
                 }`}
               >
-                {count}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={() => setIsStarted(true)}
-          className="w-full py-5 bg-primary text-white rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary-hover transition-all flex items-center justify-center gap-3"
-        >
-          <Play fill="currentColor" size={24} />
-          <span>{t.qcm.start}</span>
-        </button>
+                <Icon size={20} />
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="font-extrabold text-ink">{t.qcm.modes[item].title}</span>
+                  {item === 'smart' && (
+                    <span className="px-2 py-0.5 rounded-full bg-accent-soft text-accent-ink text-xs font-extrabold">{t.qcm.recommended}</span>
+                  )}
+                  {(item === 'reverse' || item === 'mistakes' || item === 'favorites') && (
+                    <span className="px-2 py-0.5 rounded-full bg-soft text-soft-ink text-xs font-extrabold">{t.qcm.isNew}</span>
+                  )}
+                </span>
+                <span className="block text-sm font-medium text-muted">{subtitleFor(item)}</span>
+              </span>
+              <span
+                className={`w-5 h-5 shrink-0 rounded-full ${isActive ? 'border-[6px] border-primary' : 'border-2 border-line'}`}
+                aria-hidden="true"
+              />
+            </button>
+          );
+        })}
       </div>
+
+      {/* Nombre de noms, toujours tirés au hasard */}
+      <section className="rounded-3xl bg-surface border border-line p-4 space-y-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="font-extrabold text-ink">{t.qcm.countTitle}</h2>
+          <span className="text-xs font-bold text-muted">{t.qcm.random}</span>
+        </div>
+        <div role="group" aria-label={t.qcm.countTitle} className="grid grid-cols-5 gap-2">
+          {QUESTION_COUNTS.map(value => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setCount(value)}
+              aria-pressed={count === value}
+              className={`h-12 rounded-xl font-extrabold transition-colors ${
+                count === value ? 'bg-primary text-on-primary' : 'bg-ground text-ink hover:bg-track'
+              }`}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+        <p className="text-sm font-medium text-muted">{poolSize > 0 ? helper : t.qcm.emptyPool}</p>
+      </section>
+
+      <button
+        type="button"
+        onClick={() => startSession(mode, pickQuestionIds(mode, count, progress), false)}
+        disabled={poolSize === 0}
+        className="w-full flex items-center justify-center gap-3 h-14 rounded-2xl bg-primary text-on-primary text-lg font-extrabold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <Play fill="currentColor" size={20} />
+        {t.qcm.startCount(questionCount)}
+      </button>
     </div>
   );
 }

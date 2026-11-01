@@ -2,18 +2,16 @@
 
 /* ------------------------------------------------------------------
    1. MODE SOMBRE
-   Les classes dark: suivent maintenant le choix fait dans l'app
-   (classe .dark posée par PreferencesContext), et plus le réglage
-   du téléphone. Corrige les titres invisibles quand le téléphone
-   est en sombre et l'app en clair.
+   Les classes dark: suivent le choix fait dans l'app (classe .dark
+   posée sur <html> par PreferencesContext), pas le réglage du téléphone.
    ------------------------------------------------------------------ */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ------------------------------------------------------------------
-   2. PALETTE DE LA REFONTE
-   Émeraude (thème clair) et Émeraude sombre (thème sombre).
-   Chaque couleur a un nom de rôle ; les écrans refaits utiliseront
-   ces noms (bg-surface, text-ink, bg-hero, text-arabic...).
+   2. PALETTE : Émeraude (clair) et Émeraude sombre (sombre)
+   Chaque couleur a un nom de rôle. Les écrans n'utilisent que ces noms
+   (bg-surface, text-ink, bg-hero, text-arabic...) : changer une valeur
+   ici change toute l'app.
    ------------------------------------------------------------------ */
 :root {
   --ilm-ground: #F3F8F5;        /* fond de l'app */
@@ -24,19 +22,24 @@
   --ilm-primary: #047857;       /* boutons, éléments actifs */
   --ilm-primary-hover: #065F46;
   --ilm-on-primary: #FFFFFF;    /* texte posé sur primary */
-  --ilm-soft: #D1FAE5;          /* vert clair (puces, onglet actif) */
+  --ilm-soft: #D1FAE5;          /* vert clair (puces, onglet actif, bonne réponse) */
   --ilm-soft-ink: #065F46;      /* texte posé sur soft */
-  --ilm-hero: #064E3B;          /* bandeaux foncés (Nom du jour) */
+  --ilm-hero: #064E3B;          /* bandeaux foncés (Nom du jour, verso des cartes) */
+  --ilm-hero-soft: #0B5E48;     /* motifs décoratifs sur hero */
   --ilm-on-hero: #FFFFFF;
   --ilm-hero-muted: #A7F3D0;
-  --ilm-arabic: #047857;        /* couleur des noms en arabe */
+  --ilm-arabic: #047857;        /* noms en arabe */
   --ilm-accent: #F5B83D;        /* récompenses : XP, badges */
   --ilm-accent-soft: #FEF3C7;
   --ilm-accent-ink: #8A5300;
+  --ilm-info: #14B8A6;          /* badge « Sans faute », tuile QCM */
+  --ilm-info-soft: #CCFBF1;
+  --ilm-info-ink: #115E59;
   --ilm-danger: #C2410C;        /* mauvaise réponse, à revoir */
+  --ilm-on-danger: #FFFFFF;
   --ilm-danger-soft: #FFEDD5;
   --ilm-danger-ink: #9A3412;
-  --ilm-track: #E2EBE6;         /* barres de progression vides */
+  --ilm-track: #E2EBE6;         /* barres vides, éléments verrouillés */
 }
 
 .dark {
@@ -45,29 +48,30 @@
   --ilm-line: #21402F;
   --ilm-ink: #E8F4EC;
   --ilm-muted: #9DB8AA;
-  /* #059669 tant que les boutons existants ont du texte blanc.
-     Passera à #34D399 avec un texte foncé quand les écrans seront refaits. */
-  --ilm-primary: #059669;
-  --ilm-primary-hover: #047857;
-  --ilm-on-primary: #FFFFFF;
+  --ilm-primary: #34D399;       /* vert menthe, avec un texte foncé */
+  --ilm-primary-hover: #6EE7B7;
+  --ilm-on-primary: #05241A;
   --ilm-soft: #163A2C;
   --ilm-soft-ink: #86EFAC;
   --ilm-hero: #14412F;
+  --ilm-hero-soft: #1A5039;
   --ilm-on-hero: #ECFDF5;
   --ilm-hero-muted: #9FE3C1;
   --ilm-arabic: #6EE7B7;
   --ilm-accent: #FBBF24;
   --ilm-accent-soft: #3A2F12;
   --ilm-accent-ink: #FCD34D;
+  --ilm-info: #2DD4BF;
+  --ilm-info-soft: #123836;
+  --ilm-info-ink: #5EEAD4;
   --ilm-danger: #FB923C;
+  --ilm-on-danger: #2A1206;
   --ilm-danger-soft: #3B2216;
   --ilm-danger-ink: #FDBA74;
   --ilm-track: #1F3A2E;
 }
 
-/* Les noms de rôle deviennent des classes Tailwind :
-   bg-ground, bg-surface, border-line, text-ink, text-muted, bg-primary,
-   text-on-primary, bg-soft, text-soft-ink, bg-hero, text-arabic, etc. */
+/* Les noms de rôle deviennent des classes Tailwind (bg-*, text-*, border-*, fill-*...) */
 @theme inline {
   --color-ground: var(--ilm-ground);
   --color-surface: var(--ilm-surface);
@@ -80,13 +84,18 @@
   --color-soft: var(--ilm-soft);
   --color-soft-ink: var(--ilm-soft-ink);
   --color-hero: var(--ilm-hero);
+  --color-hero-soft: var(--ilm-hero-soft);
   --color-on-hero: var(--ilm-on-hero);
   --color-hero-muted: var(--ilm-hero-muted);
   --color-arabic: var(--ilm-arabic);
   --color-accent: var(--ilm-accent);
   --color-accent-soft: var(--ilm-accent-soft);
   --color-accent-ink: var(--ilm-accent-ink);
+  --color-info: var(--ilm-info);
+  --color-info-soft: var(--ilm-info-soft);
+  --color-info-ink: var(--ilm-info-ink);
   --color-danger: var(--ilm-danger);
+  --color-on-danger: var(--ilm-on-danger);
   --color-danger-soft: var(--ilm-danger-soft);
   --color-danger-ink: var(--ilm-danger-ink);
   --color-track: var(--ilm-track);
@@ -94,12 +103,11 @@
 }
 
 /* ------------------------------------------------------------------
-   3. POLICES ET GRIS TEINTÉS DE VERT
-   Polices : Plus Jakarta Sans pour l'interface, Noto Sans Arabic
-   pour l'arabe (chargées dans src/main.tsx).
-   Les écrans actuels utilisent les gris "stone" de Tailwind.
-   On remplace ces gris par des gris légèrement verts : toute l'app
-   prend les couleurs Émeraude sans modifier un seul composant.
+   3. POLICES ET GRIS
+   Polices : Plus Jakarta Sans (interface) et Noto Sans Arabic (arabe),
+   chargées dans src/main.tsx.
+   Les gris « stone » de Tailwind sont teintés de vert, au cas où un
+   écran les utilise encore.
    ------------------------------------------------------------------ */
 @theme {
   --font-sans: "Plus Jakarta Sans Variable", "Noto Sans Arabic Variable", ui-sans-serif, system-ui, sans-serif;
@@ -118,8 +126,15 @@
   --color-stone-950: #0A1712;
 }
 
+/* Marge du bas qui tient compte de la barre d'accueil de l'iPhone */
+@utility pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
 /* ------------------------------------------------------------------
    4. BASE
+   La taille du texte (Paramètres) change la taille de police de <html> :
+   les écrans utilisent des tailles en rem (classes Tailwind) pour suivre.
    ------------------------------------------------------------------ */
 @layer base {
   html {
@@ -128,24 +143,17 @@
   }
 
   body {
-    @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
+    @apply bg-ground text-ink;
   }
-
-  /* Text Size Scaling */
-  html.text-normal { font-size: 16px; }
-  html.text-large { font-size: 20px; }
-  html.text-extra-large { font-size: 24px; }
 }
 
-/* Police arabe de l'app (Noto Sans Arabic), désormais vraiment chargée */
+/* Noms en arabe : toujours avec dir="rtl" et lang="ar" sur l'élément */
 .arabic-text {
   font-family: var(--font-arabic);
+  line-height: 1.5;
 }
 
-.glass-card {
-  @apply bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-xl rounded-2xl;
-}
-
+/* Retournement 3D des cartes */
 .perspective-1000 {
   perspective: 1000px;
 }
@@ -157,13 +165,3 @@
 .backface-hidden {
   backface-visibility: hidden;
 }
-
-/* Dark mode overrides for common elements */
-.dark .bg-white { @apply bg-stone-900; }
-.dark .border-stone-100 { @apply border-stone-800; }
-.dark .border-stone-200 { @apply border-stone-700; }
-.dark .text-stone-800 { @apply text-stone-100; }
-.dark .text-stone-700 { @apply text-stone-200; }
-.dark .text-stone-500 { @apply text-stone-400; }
-.dark .bg-stone-50 { @apply bg-stone-950; }
-.dark .bg-stone-100 { @apply bg-stone-800; }
