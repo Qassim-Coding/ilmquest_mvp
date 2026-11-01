@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => {
           name: 'IlmQuest',
           short_name: 'IlmQuest',
           description: "Apprenez et mémorisez les 99 Noms d'Allah",
-          theme_color: '#f5f5f4',
-          background_color: '#f5f5f4',
+          theme_color: '#F3F8F5',
+          background_color: '#F3F8F5',
           display: 'standalone',
           icons: [
             {

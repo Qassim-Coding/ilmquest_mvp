@@ -21,10 +21,10 @@
     <clipPath id="ic"><circle cx="40" cy="40" r="34"/></clipPath>
   </defs>
 
-  <!-- IcÃ´ne cercle -->
+  <!-- Icône cercle -->
   <circle cx="40" cy="40" r="34" fill="url(#bg)"/>
 
-  <!-- Ã‰toiles de fond -->
+  <!-- Étoiles de fond -->
   <g clip-path="url(#ic)" opacity="0.7">
     <circle cx="16" cy="14" r="1"   fill="#fffbe6"/>
     <circle cx="60" cy="12" r="0.8" fill="#fffbe6"/>
@@ -38,19 +38,19 @@
   <circle cx="36" cy="40" r="20" fill="url(#moon)" clip-path="url(#ic)"/>
   <circle cx="45" cy="33" r="18" fill="#06091f" clip-path="url(#ic)"/>
 
-  <!-- Ã‰toile -->
+  <!-- Étoile -->
   <g transform="translate(60, 20) rotate(22.5)">
     <polygon points="0,-10 2.5,-2.5 10,0 2.5,2.5 0,10 -2.5,2.5 -10,0 -2.5,-2.5" fill="url(#star)"/>
     <circle cx="0" cy="0" r="2.2" fill="#fffbe6"/>
   </g>
 
-  <!-- Bordure icÃ´ne -->
+  <!-- Bordure icône -->
   <circle cx="40" cy="40" r="34" fill="none" stroke="#d4a012" stroke-width="1.2" opacity="0.55"/>
 
-  <!-- Ligne dÃ©corative -->
+  <!-- Ligne décorative -->
   <line x1="84" y1="20" x2="84" y2="60" stroke="#d4a012" stroke-width="0.8" opacity="0.35"/>
 
-  <!-- Ilm Quest centrÃ© verticalement -->
+  <!-- Ilm Quest centré verticalement -->
   <text x="96" y="46"
         font-family="Georgia, 'Times New Roman', serif"
         font-size="26"

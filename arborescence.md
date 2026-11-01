@@ -1,50 +1,61 @@
 # Arborescence du projet IlmQuest
 
-Voici la structure détaillée des fichiers et dossiers composant l'application **IlmQuest**.
+Voici la structure des fichiers et dossiers qui composent l'application **IlmQuest**.
+Les dossiers générés (`node_modules/`, `dist/`) ne sont pas listés.
 
 ```text
 /
-├── index.html                  # Point d'entrée HTML de l'application
-├── metadata.json               # Métadonnées de l'application (Nom, description)
-├── package.json                # Dépendances et scripts du projet
-├── README.md                   # Documentation et but de l'application
+├── .env.example                # Exemple de variables d'environnement
+├── .gitignore                  # Fichiers exclus du dépôt
 ├── arborescence.md             # Structure du projet (ce fichier)
+├── capacitor.config.ts         # Configuration Capacitor (emballage mobile, webDir: dist)
+├── index.html                  # Point d'entrée HTML
+├── metadata.json               # Métadonnées de l'application (nom, description)
+├── package.json                # Dépendances et scripts
+├── package-lock.json           # Versions figées des dépendances
+├── README.md                   # Documentation et but de l'application
+├── tsconfig.json               # Configuration TypeScript
+├── vite.config.ts              # Configuration Vite, Tailwind et PWA
 │
-└── src/                        # Code source principal
+├── public/                     # Fichiers statiques servis tels quels
+│   ├── icon.svg                # Icône de l'application (PWA, favicon)
+│   └── logo_ilmquest_Epure.svg # Logo
+│
+└── src/                        # Code source
     ├── main.tsx                # Point d'entrée React
-    ├── App.tsx                 # Composant racine (Routage interne, Layout principal)
-    ├── index.css               # Styles globaux et configuration Tailwind CSS
+    ├── App.tsx                 # Composant racine (onglets, en-tête, navigation)
+    ├── index.css               # Styles globaux, tokens Tailwind, classes utilitaires
     │
-    ├── components/             # Composants UI réutilisables
-    │   ├── Home.tsx            # Tableau de bord / Page d'accueil
-    │   ├── NamesList.tsx       # Vue Liste avec barre de recherche
-    │   ├── Flashcards.tsx      # Vue Cartes de mémorisation interactives
-    │   ├── Qcm.tsx             # Menu de sélection pour le QCM Classique
-    │   ├── Challenge.tsx       # Menu de sélection pour le Mode Défi
-    │   ├── QuizEngine.tsx      # Moteur logique partagé pour les QCM et Défis
-    │   ├── Settings.tsx        # Vue Paramètres (Thème, Langue, Taille du texte)
-    │   └── Layout.tsx          # Composant de mise en page (si utilisé)
+    ├── components/             # Vues de l'application
+    │   ├── Home.tsx            # Accueil et progression
+    │   ├── NamesList.tsx       # Liste avec recherche
+    │   ├── Flashcards.tsx      # Cartes de mémorisation
+    │   ├── Qcm.tsx             # Menu du QCM classique
+    │   ├── Challenge.tsx       # Menu du mode Défi
+    │   ├── QuizEngine.tsx      # Moteur partagé par le QCM et le Défi
+    │   ├── Settings.tsx        # Paramètres (thème, langue, taille du texte)
+    │   └── Layout.tsx          # Ancien habillage, non branché sur App.tsx
     │
-    ├── context/                # Gestionnaires d'état global (React Context)
-    │   ├── LanguageContext.tsx # Gère la langue (FR/EN) et les traductions
-    │   ├── PreferencesContext.tsx # Gère le thème (Clair/Sombre) et la taille du texte
-    │   ├── ProgressContext.tsx # Gère la sauvegarde des scores et des noms acquis
-    │   └── SettingsContext.tsx # (Ancien contexte ou utilitaire de paramètres)
+    ├── context/                # État global (React Context + localStorage)
+    │   ├── LanguageContext.tsx    # Langue active (fr/en), clé 99names_lang
+    │   ├── PreferencesContext.tsx # Thème et taille du texte
+    │   ├── ProgressContext.tsx    # Noms acquis et scores de défi
+    │   └── SettingsContext.tsx    # Ancien contexte, non branché sur App.tsx
     │
-    ├── data/                   # Données statiques
-    │   └── names.ts            # Base de données des 99 Noms (Arabe, Translittération, Sens)
+    ├── data/                   # Contenu statique
+    │   └── names.ts            # Les 99 noms (arabe, translittération, sens fr/en)
     │
-    ├── i18n/                   # Internationalisation
-    │   └── translations.ts     # Dictionnaire des textes de l'interface (FR/EN)
+    ├── i18n/                   # Textes de l'interface
+    │   └── translations.ts     # Dictionnaire français et anglais
     │
-    ├── services/               # Services externes ou logiques métier complexes
-    │
-    └── types/                  # Définitions de types TypeScript globaux
+    └── types/                  # Types TypeScript
+        └── index.ts            # DivineName, UserProgress, modes de quiz
 ```
 
-## Description des dossiers clés
+## Dossiers clés
 
-- **`components/`** : Contient toutes les "vues" de l'application. `QuizEngine.tsx` est particulièrement important car il centralise la logique des questions/réponses partagée par `Qcm.tsx` et `Challenge.tsx`.
-- **`context/`** : Utilise l'API Context de React couplée au `localStorage` du navigateur pour s'assurer que les préférences de l'utilisateur (langue, thème, progression) persistent même s'il ferme l'application.
-- **`data/`** : Contient le fichier `names.ts` qui est le cœur du contenu de l'application (les 99 Noms d'Allah).
-- **`i18n/`** : Sépare les textes de l'interface du code logique, permettant d'ajouter facilement de nouvelles langues à l'avenir.
+- **`components/`** : les vues. `QuizEngine.tsx` porte la logique des questions, partagée par `Qcm.tsx` et `Challenge.tsx`. `Layout.tsx` date d'une ancienne coquille et n'est pas utilisé par `App.tsx`.
+- **`context/`** : langue, préférences et progression, persistées dans le `localStorage`. `SettingsContext.tsx` est l'ancien système (clés `lang`, `theme`, `textSize`) et n'est plus monté.
+- **`data/`** : `names.ts`, source unique des 99 noms.
+- **`i18n/`** : textes d'interface séparés du code, en français et en anglais.
+- **`public/`** : icône et logo. Le manifeste PWA, dans `vite.config.ts`, pointe vers `icon.svg`.

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, XCircle, ArrowRight, RotateCcw, X } from 'lucide-react';
-import { namesOfAllah, DivineName } from '../data/names';
+import { namesOfAllah } from '../data/names';
+import { DivineName } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 
 interface QuizEngineProps {
@@ -35,13 +36,22 @@ export default function QuizEngine({ mode, count, onComplete, onStop }: QuizEngi
 
   const generateOptions = (correctName: DivineName) => {
     if (!correctName) return;
-    const wrongOptions = namesOfAllah
-      .filter(n => n.id !== correctName.id)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3)
-      .map(n => n.meaning[language]);
-    
-    const allOptions = [...wrongOptions, correctName.meaning[language]].sort(() => 0.5 - Math.random());
+    // Certains noms partagent le même sens (ex. « L’Unique » pour 97 et 98).
+    // On écarte tout sens identique à la bonne réponse ou déjà proposé,
+    // pour ne jamais afficher deux boutons avec le même texte.
+    const normalize = (text: string) => text.trim().toLowerCase();
+    const correctMeaning = correctName.meaning[language];
+    const usedMeanings = new Set([normalize(correctMeaning)]);
+    const wrongOptions: string[] = [];
+    for (const n of [...namesOfAllah].sort(() => 0.5 - Math.random())) {
+      const meaning = n.meaning[language];
+      if (n.id === correctName.id || usedMeanings.has(normalize(meaning))) continue;
+      usedMeanings.add(normalize(meaning));
+      wrongOptions.push(meaning);
+      if (wrongOptions.length === 3) break;
+    }
+
+    const allOptions = [...wrongOptions, correctMeaning].sort(() => 0.5 - Math.random());
     setOptions(allOptions);
     setSelectedAnswer(-1);
   };
@@ -62,7 +72,9 @@ export default function QuizEngine({ mode, count, onComplete, onStop }: QuizEngi
     } else {
       setIsFinished(true);
       if (onComplete) {
-        onComplete(score + (options[selectedAnswer] === questions[currentIndex].meaning[language] ? 1 : 0), questions.length);
+        // score contient déjà la dernière réponse (ajoutée dans handleSelect) :
+        // l'ancien code la comptait une deuxième fois.
+        onComplete(score, questions.length);
       }
     }
   };

@@ -1,18 +1,132 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #059669; /* Emerald 600 */
-  --color-primary-hover: #047857;
-  --color-secondary: #f59e0b; /* Amber 500 */
+/* ------------------------------------------------------------------
+   1. MODE SOMBRE
+   Les classes dark: suivent maintenant le choix fait dans l'app
+   (classe .dark posée par PreferencesContext), et plus le réglage
+   du téléphone. Corrige les titres invisibles quand le téléphone
+   est en sombre et l'app en clair.
+   ------------------------------------------------------------------ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------
+   2. PALETTE DE LA REFONTE
+   Émeraude (thème clair) et Émeraude sombre (thème sombre).
+   Chaque couleur a un nom de rôle ; les écrans refaits utiliseront
+   ces noms (bg-surface, text-ink, bg-hero, text-arabic...).
+   ------------------------------------------------------------------ */
+:root {
+  --ilm-ground: #F3F8F5;        /* fond de l'app */
+  --ilm-surface: #FFFFFF;       /* cartes */
+  --ilm-line: #DCE9E1;          /* bordures */
+  --ilm-ink: #0C2A1F;           /* texte principal */
+  --ilm-muted: #4F675C;         /* texte secondaire */
+  --ilm-primary: #047857;       /* boutons, éléments actifs */
+  --ilm-primary-hover: #065F46;
+  --ilm-on-primary: #FFFFFF;    /* texte posé sur primary */
+  --ilm-soft: #D1FAE5;          /* vert clair (puces, onglet actif) */
+  --ilm-soft-ink: #065F46;      /* texte posé sur soft */
+  --ilm-hero: #064E3B;          /* bandeaux foncés (Nom du jour) */
+  --ilm-on-hero: #FFFFFF;
+  --ilm-hero-muted: #A7F3D0;
+  --ilm-arabic: #047857;        /* couleur des noms en arabe */
+  --ilm-accent: #F5B83D;        /* récompenses : XP, badges */
+  --ilm-accent-soft: #FEF3C7;
+  --ilm-accent-ink: #8A5300;
+  --ilm-danger: #C2410C;        /* mauvaise réponse, à revoir */
+  --ilm-danger-soft: #FFEDD5;
+  --ilm-danger-ink: #9A3412;
+  --ilm-track: #E2EBE6;         /* barres de progression vides */
 }
 
+.dark {
+  --ilm-ground: #0A1712;
+  --ilm-surface: #12241C;
+  --ilm-line: #21402F;
+  --ilm-ink: #E8F4EC;
+  --ilm-muted: #9DB8AA;
+  /* #059669 tant que les boutons existants ont du texte blanc.
+     Passera à #34D399 avec un texte foncé quand les écrans seront refaits. */
+  --ilm-primary: #059669;
+  --ilm-primary-hover: #047857;
+  --ilm-on-primary: #FFFFFF;
+  --ilm-soft: #163A2C;
+  --ilm-soft-ink: #86EFAC;
+  --ilm-hero: #14412F;
+  --ilm-on-hero: #ECFDF5;
+  --ilm-hero-muted: #9FE3C1;
+  --ilm-arabic: #6EE7B7;
+  --ilm-accent: #FBBF24;
+  --ilm-accent-soft: #3A2F12;
+  --ilm-accent-ink: #FCD34D;
+  --ilm-danger: #FB923C;
+  --ilm-danger-soft: #3B2216;
+  --ilm-danger-ink: #FDBA74;
+  --ilm-track: #1F3A2E;
+}
+
+/* Les noms de rôle deviennent des classes Tailwind :
+   bg-ground, bg-surface, border-line, text-ink, text-muted, bg-primary,
+   text-on-primary, bg-soft, text-soft-ink, bg-hero, text-arabic, etc. */
+@theme inline {
+  --color-ground: var(--ilm-ground);
+  --color-surface: var(--ilm-surface);
+  --color-line: var(--ilm-line);
+  --color-ink: var(--ilm-ink);
+  --color-muted: var(--ilm-muted);
+  --color-primary: var(--ilm-primary);
+  --color-primary-hover: var(--ilm-primary-hover);
+  --color-on-primary: var(--ilm-on-primary);
+  --color-soft: var(--ilm-soft);
+  --color-soft-ink: var(--ilm-soft-ink);
+  --color-hero: var(--ilm-hero);
+  --color-on-hero: var(--ilm-on-hero);
+  --color-hero-muted: var(--ilm-hero-muted);
+  --color-arabic: var(--ilm-arabic);
+  --color-accent: var(--ilm-accent);
+  --color-accent-soft: var(--ilm-accent-soft);
+  --color-accent-ink: var(--ilm-accent-ink);
+  --color-danger: var(--ilm-danger);
+  --color-danger-soft: var(--ilm-danger-soft);
+  --color-danger-ink: var(--ilm-danger-ink);
+  --color-track: var(--ilm-track);
+  --color-secondary: var(--ilm-accent);
+}
+
+/* ------------------------------------------------------------------
+   3. POLICES ET GRIS TEINTÉS DE VERT
+   Polices : Plus Jakarta Sans pour l'interface, Noto Sans Arabic
+   pour l'arabe (chargées dans src/main.tsx).
+   Les écrans actuels utilisent les gris "stone" de Tailwind.
+   On remplace ces gris par des gris légèrement verts : toute l'app
+   prend les couleurs Émeraude sans modifier un seul composant.
+   ------------------------------------------------------------------ */
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", "Noto Sans Arabic Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "Noto Sans Arabic Variable", "Noto Sans Arabic", sans-serif;
+
+  --color-stone-50: #F3F8F5;
+  --color-stone-100: #E6EFEA;
+  --color-stone-200: #D5E3DA;
+  --color-stone-300: #B7CBBF;
+  --color-stone-400: #7C9488;
+  --color-stone-500: #5B7368;
+  --color-stone-600: #45594F;
+  --color-stone-700: #2E4A3E;
+  --color-stone-800: #1C3A2E;
+  --color-stone-900: #12241C;
+  --color-stone-950: #0A1712;
+}
+
+/* ------------------------------------------------------------------
+   4. BASE
+   ------------------------------------------------------------------ */
 @layer base {
   html {
     font-family: var(--font-sans);
     transition: background-color 0.3s ease, color 0.3s ease;
   }
-  
+
   body {
     @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
   }
@@ -23,8 +137,9 @@
   html.text-extra-large { font-size: 24px; }
 }
 
+/* Police arabe de l'app (Noto Sans Arabic), désormais vraiment chargée */
 .arabic-text {
-  font-family: "Noto Sans Arabic", sans-serif;
+  font-family: var(--font-arabic);
 }
 
 .glass-card {

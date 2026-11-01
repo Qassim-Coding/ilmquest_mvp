@@ -20,7 +20,8 @@ export default function Challenge() {
   }
 
   const bestScore = progress.challengeScores.length > 0 
-    ? Math.max(...progress.challengeScores.map(s => Math.round((s.score / s.total) * 100))) 
+    // Math.min plafonne à 100 % les anciens scores gonflés déjà enregistrés chez les users
+    ? Math.max(...progress.challengeScores.map(s => Math.round((Math.min(s.score, s.total) / s.total) * 100)))
     : 0;
 
   return (
