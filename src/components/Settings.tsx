@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { getNameById } from '../lib/learning';
+import { useArabic } from '../lib/arabic';
 
 interface SettingsProps {
   onBack: () => void;
@@ -16,8 +17,9 @@ const THEME_PREVIEWS = {
 
 export default function Settings({ onBack }: SettingsProps) {
   const { language, setLanguage, t } = useLanguage();
-  const { isDarkMode, setIsDarkMode, textSize, setTextSize } = usePreferences();
-  const sample = getNameById(2);
+  const { isDarkMode, setIsDarkMode, textSize, setTextSize, showVowels, setShowVowels } = usePreferences();
+  const arabic = useArabic();
+  const sample = getNameById(3);
 
   const themes = [
     { dark: false, label: t.settings.light, sub: t.settings.lightSub, colors: THEME_PREVIEWS.light },
@@ -99,6 +101,22 @@ export default function Settings({ onBack }: SettingsProps) {
         </div>
       </section>
 
+      {/* Voyelles arabes */}
+      <section className="space-y-2.5">
+        <div className="px-1">
+          <h2 className="font-extrabold text-ink">{t.settings.vowels}</h2>
+          <p className="text-sm font-medium text-muted">{t.settings.vowelsHint}</p>
+        </div>
+        <div role="group" aria-label={t.settings.vowels} className="grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl bg-track">
+          <button type="button" aria-pressed={showVowels} onClick={() => setShowVowels(true)} className={segment(showVowels)}>
+            {t.settings.vowelsOn}
+          </button>
+          <button type="button" aria-pressed={!showVowels} onClick={() => setShowVowels(false)} className={segment(!showVowels)}>
+            {t.settings.vowelsOff}
+          </button>
+        </div>
+      </section>
+
       {/* Taille du texte */}
       <section className="space-y-2.5">
         <h2 className="px-1 font-extrabold text-ink">{t.settings.textSize}</h2>
@@ -113,15 +131,17 @@ export default function Settings({ onBack }: SettingsProps) {
             {t.settings.large}
           </button>
         </div>
-        {sample && (
-          <div className="flex flex-col items-center gap-0.5 p-4 rounded-2xl bg-surface border border-line text-center">
-            <span className="text-xs font-extrabold tracking-widest uppercase text-muted">{t.settings.preview}</span>
-            <span lang="ar" dir="rtl" className="arabic-text text-4xl font-bold text-arabic">{sample.arabic}</span>
-            <span className="text-lg font-extrabold text-ink">{sample.transliteration}</span>
-            <span className="text-sm font-medium text-muted">{sample.meaning[language]}</span>
-          </div>
-        )}
       </section>
+
+      {/* Aperçu : reflète la taille du texte et le choix des voyelles */}
+      {sample && (
+        <div className="flex flex-col items-center gap-0.5 p-4 rounded-2xl bg-surface border border-line text-center">
+          <span className="text-xs font-extrabold tracking-widest uppercase text-muted">{t.settings.preview}</span>
+          <span lang="ar" dir="rtl" className="arabic-text text-4xl font-bold text-arabic">{arabic(sample)}</span>
+          <span className="text-lg font-extrabold text-ink">{sample.transliteration}</span>
+          <span className="text-sm font-medium text-muted">{sample.meaning[language]}</span>
+        </div>
+      )}
     </div>
   );
 }

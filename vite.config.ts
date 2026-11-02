@@ -12,7 +12,11 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'logo_ilmquest_Epure.svg'],
+        includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+        // Polices et icônes mises en cache avec l'app : l'arabe s'affiche aussi hors ligne
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        },
         manifest: {
           name: 'IlmQuest',
           short_name: 'IlmQuest',
@@ -20,13 +24,12 @@ export default defineConfig(({ mode }) => {
           theme_color: '#F3F8F5',
           background_color: '#F3F8F5',
           display: 'standalone',
+          // Icône « Livre ouvert » : PNG pour Android et l'installation, SVG pour les navigateurs récents
           icons: [
-            {
-              src: 'icon.svg',
-              sizes: '512x512',
-              type: 'image/svg+xml',
-              purpose: 'any maskable',
-            },
+            { src: 'pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           ],
         },
       }),

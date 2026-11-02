@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import { Play, BookOpen, ArrowLeftRight, Repeat, XCircle, Heart } from 'lucide-react';
 import QuizEngine from './QuizEngine';
 import { useLanguage } from '../context/LanguageContext';
@@ -50,20 +50,22 @@ export default function Qcm({ preset = null }: QcmProps) {
   };
 
   if (session) {
+    // Nouvelle clé = nouvelle série : le Fragment remet le quiz à zéro
     return (
-      <QuizEngine
-        key={session.key}
-        kind="practice"
-        mode={session.mode}
-        questionIds={session.ids}
-        onStop={() => setSession(null)}
-        onRestart={() =>
-          session.fixed
-            ? startSession(session.mode, shuffle(session.ids), true)
-            : startSession(session.mode, pickQuestionIds(session.mode, count, progress), false)
-        }
-        onReviewMistakes={(ids) => startSession('classic', shuffle(ids), true)}
-      />
+      <Fragment key={session.key}>
+        <QuizEngine
+          kind="practice"
+          mode={session.mode}
+          questionIds={session.ids}
+          onStop={() => setSession(null)}
+          onRestart={() =>
+            session.fixed
+              ? startSession(session.mode, shuffle(session.ids), true)
+              : startSession(session.mode, pickQuestionIds(session.mode, count, progress), false)
+          }
+          onReviewMistakes={(ids) => startSession('classic', shuffle(ids), true)}
+        />
+      </Fragment>
     );
   }
 

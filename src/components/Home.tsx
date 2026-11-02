@@ -3,6 +3,7 @@ import { List, Layers, BookOpen, Target, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
 import { countByLevel, getDueIds, getNameOfTheDay, TOTAL_NAMES } from '../lib/learning';
+import { useArabic } from '../lib/arabic';
 import { ReviewMode, Tab } from '../types';
 
 interface HomeProps {
@@ -13,6 +14,7 @@ interface HomeProps {
 
 export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProps) {
   const { t, language } = useLanguage();
+  const arabic = useArabic();
   const { progress } = useProgress();
 
   const nameOfTheDay = getNameOfTheDay();
@@ -47,7 +49,7 @@ export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProp
         <div className="relative flex items-end justify-between gap-3">
           <div className="min-w-0">
             <p lang="ar" dir="rtl" className="arabic-text text-5xl font-bold text-on-hero text-left">
-              {nameOfTheDay.arabic}
+              {arabic(nameOfTheDay)}
             </p>
             <p className="text-xl font-extrabold text-on-hero">{nameOfTheDay.transliteration}</p>
             <p className="text-sm font-medium text-hero-muted">{nameOfTheDay.meaning[language]}</p>

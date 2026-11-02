@@ -5,6 +5,7 @@ import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { countByLevel, getLevel } from '../lib/learning';
 import { LEVEL_PILL } from '../lib/levelStyles';
+import { stripHarakat, useArabic } from '../lib/arabic';
 
 type ListFilter = 'all' | 'mastered' | 'learning' | 'favorites';
 
@@ -17,15 +18,18 @@ export default function NamesList({ onOpenName }: NamesListProps) {
   const { language, t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<ListFilter>('all');
+  const arabic = useArabic();
 
   const { mastered, learning, toDiscover } = countByLevel(progress);
   const term = searchTerm.toLowerCase();
+  // La recherche en arabe ignore les voyelles : « الرَّحِيمُ » trouve « الرحيم »
+  const arabicTerm = stripHarakat(searchTerm.trim());
 
   const filteredNames = namesOfAllah.filter(name => {
     const matchesSearch =
       name.transliteration.toLowerCase().includes(term) ||
       name.meaning[language].toLowerCase().includes(term) ||
-      name.arabic.includes(searchTerm);
+      (arabicTerm !== '' && name.arabic.includes(arabicTerm));
     if (!matchesSearch) return false;
     const level = getLevel(progress, name.id);
     if (filter === 'mastered') return level === 'mastered';
@@ -107,7 +111,7 @@ export default function NamesList({ onOpenName }: NamesListProps) {
                     <span className="block text-sm font-medium text-muted">{name.meaning[language]}</span>
                   </span>
                   <span className="flex flex-col items-end gap-1 shrink-0">
-                    <span lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-arabic">{name.arabic}</span>
+                    <span lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-arabic">{arabic(name)}</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-extrabold ${LEVEL_PILL[level]}`}>
                       {t.levels[level]}
                     </span>

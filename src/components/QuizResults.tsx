@@ -3,12 +3,15 @@ import { Check, RotateCcw } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
 import { BADGES, getNameById, OBJECTIVES } from '../lib/learning';
-import { AnswerRecord } from '../types';
+import { useArabic } from '../lib/arabic';
+import { AnswerRecord, TimedLevel } from '../types';
 import BadgeIcon, { badgeLabel } from './BadgeIcon';
 
 interface QuizResultsProps {
   label: string;
   timed: boolean;
+  /** Difficulté du « Contre la montre », affichée dans le résumé */
+  timedLevel?: TimedLevel;
   answers: AnswerRecord[];
   total: number;
   xpGained: number;
@@ -27,6 +30,7 @@ const MAX_REVIEW_ROWS = 5;
 export default function QuizResults({
   label,
   timed,
+  timedLevel = 'medium',
   answers,
   total,
   xpGained,
@@ -37,6 +41,7 @@ export default function QuizResults({
   onBack,
 }: QuizResultsProps) {
   const { language, t } = useLanguage();
+  const arabic = useArabic();
   const { progress } = useProgress();
 
   const score = answers.filter(answer => answer.correct).length;
@@ -73,7 +78,7 @@ export default function QuizResults({
         <div className="min-w-0">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">{heading}</h1>
           <p className="text-sm font-semibold text-muted">
-            {timed ? t.results.timedSummary(score) : t.results.summary(label, total)}
+            {timed ? t.results.timedSummary(score, t.challenge.levels[timedLevel]) : t.results.summary(label, total)}
           </p>
         </div>
       </div>
@@ -165,7 +170,7 @@ export default function QuizResults({
                   <span className="block font-extrabold text-ink">{name.transliteration}</span>
                   <span className="block text-sm font-medium text-muted">{name.meaning[language]}</span>
                 </span>
-                <span lang="ar" dir="rtl" className="arabic-text text-2xl font-bold text-arabic">{name.arabic}</span>
+                <span lang="ar" dir="rtl" className="arabic-text text-2xl font-bold text-arabic">{arabic(name)}</span>
               </div>
             );
           })}

@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import { Play, Trophy, Target, Timer } from 'lucide-react';
 import QuizEngine from './QuizEngine';
 import BadgeIcon, { badgeLabel } from './BadgeIcon';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
-import { BADGES, getPool, pickQuestionIds, QUESTION_COUNTS, shuffle } from '../lib/learning';
+import {
+  BADGES,
+  getPool,
+  pickQuestionIds,
+  QUESTION_COUNTS,
+  shuffle,
+  TIMED_BONUS,
+  TIMED_LEVELS,
+  timedRecord,
+} from '../lib/learning';
+import { TimedLevel } from '../types';
 
 type ChallengeType = 'classic' | 'timed';
 
@@ -13,38 +23,72 @@ interface Session {
   /** « practice » quand on révise ses erreurs après un défi : ce n'est pas compté comme un défi */
   kind: 'challenge' | 'practice';
   type: ChallengeType;
+  /** Difficulté choisie pour « Contre la montre » */
+  level: TimedLevel;
   ids: number[];
+}
+
+// La dernière difficulté choisie est gardée sur le téléphone
+const LEVEL_KEY = '99names_timed_level';
+
+function loadLevel(): TimedLevel {
+  try {
+    const saved = localStorage.getItem(LEVEL_KEY);
+    return saved === 'easy' || saved === 'medium' || saved === 'hard' ? saved : 'medium';
+  } catch {
+    return 'medium';
+  }
 }
 
 export default function Challenge() {
   const { progress, saveChallengeScore } = useProgress();
   const { t } = useLanguage();
   const [type, setType] = useState<ChallengeType>('classic');
+  const [level, setLevel] = useState<TimedLevel>(loadLevel);
   const [questionCount, setQuestionCount] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
 
-  const startChallenge = (challengeType: ChallengeType) => {
+  const chooseLevel = (next: TimedLevel) => {
+    setLevel(next);
+    try {
+      localStorage.setItem(LEVEL_KEY, next);
+    } catch {
+      // Stockage indisponible : le choix vaut pour cette visite seulement
+    }
+  };
+
+  const startChallenge = (challengeType: ChallengeType, challengeLevel: TimedLevel) => {
     const ids =
       challengeType === 'timed'
         ? shuffle(getPool('classic', progress))
         : pickQuestionIds('classic', questionCount, progress);
-    setSession({ key: Date.now(), kind: 'challenge', type: challengeType, ids });
+    setSession({ key: Date.now(), kind: 'challenge', type: challengeType, level: challengeLevel, ids });
   };
 
   if (session) {
     const isChallenge = session.kind === 'challenge';
+    const isTimed = isChallenge && session.type === 'timed';
+    // Nouvelle clé = nouvelle partie : le Fragment remet le quiz à zéro
     return (
-      <QuizEngine
-        key={session.key}
-        kind={session.kind}
-        mode="classic"
-        timed={isChallenge && session.type === 'timed'}
-        questionIds={session.ids}
-        onComplete={isChallenge ? (score, total) => saveChallengeScore(score, total, session.type === 'timed') : undefined}
-        onStop={() => setSession(null)}
-        onRestart={() => (isChallenge ? startChallenge(session.type) : setSession({ ...session, key: Date.now(), ids: shuffle(session.ids) }))}
-        onReviewMistakes={(ids) => setSession({ key: Date.now(), kind: 'practice', type: 'classic', ids: shuffle(ids) })}
-      />
+      <Fragment key={session.key}>
+        <QuizEngine
+          kind={session.kind}
+          mode="classic"
+          timed={isTimed}
+          timedLevel={session.level}
+          questionIds={session.ids}
+          onComplete={isChallenge ? (score, total) => saveChallengeScore(score, total, isTimed, session.level) : undefined}
+          onStop={() => setSession(null)}
+          onRestart={() =>
+            isChallenge
+              ? startChallenge(session.type, session.level)
+              : setSession({ ...session, key: Date.now(), ids: shuffle(session.ids) })
+          }
+          onReviewMistakes={(ids) =>
+            setSession({ key: Date.now(), kind: 'practice', type: 'classic', level: session.level, ids: shuffle(ids) })
+          }
+        />
+      </Fragment>
     );
   }
 
@@ -53,14 +97,14 @@ export default function Challenge() {
   const bestScore = classicScores.length > 0
     ? Math.max(...classicScores.map(s => Math.round((Math.min(s.score, s.total) / s.total) * 100)))
     : 0;
-  const timedScores = progress.challengeScores.filter(s => s.timed);
-  const record = timedScores.length > 0 ? Math.max(...timedScores.map(s => s.score)) : 0;
+  // Un record par difficulté : +6 s et +2 s ne se comparent pas
+  const record = timedRecord(progress.challengeScores, level);
   const earnedCount = BADGES.filter(badge => progress.earnedBadges.includes(badge.id)).length;
 
   const stats = [
     { label: t.challenge.bestScore, value: `${bestScore} %`, Icon: Trophy, iconClass: 'text-accent' },
     { label: t.challenge.completed, value: String(progress.challengeScores.length), Icon: Target, iconClass: 'text-hero-muted' },
-    { label: t.challenge.record, value: String(record), Icon: Timer, iconClass: 'text-hero-muted' },
+    { label: t.challenge.record(t.challenge.levels[level]), value: String(record), Icon: Timer, iconClass: 'text-hero-muted' },
   ];
 
   const segment = (active: boolean) =>
@@ -120,13 +164,41 @@ export default function Challenge() {
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
-            <span className="flex items-center justify-center w-12 h-12 shrink-0 rounded-2xl bg-accent-soft text-accent-ink">
-              <Timer size={24} />
-            </span>
-            <div>
-              <h2 className="font-extrabold text-ink">{t.challenge.timedTitle}</h2>
-              <p className="text-sm font-medium text-muted">{t.challenge.timedDesc}</p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center w-12 h-12 shrink-0 rounded-2xl bg-accent-soft text-accent-ink">
+                <Timer size={24} />
+              </span>
+              <div>
+                <h2 className="font-extrabold text-ink">{t.challenge.timedTitle}</h2>
+                <p className="text-sm font-medium text-muted">{t.challenge.timedDesc(TIMED_BONUS[level])}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-extrabold text-ink">{t.challenge.levelTitle}</h3>
+              {/* Facile +6 s, Moyen +4 s, Difficile +2 s par bonne réponse */}
+              <div role="radiogroup" aria-label={t.challenge.levelTitle} className="grid grid-cols-3 gap-2">
+                {TIMED_LEVELS.map(id => {
+                  const isActive = level === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => chooseLevel(id)}
+                      className={`flex flex-col items-center justify-center gap-0.5 h-16 rounded-xl transition-colors ${
+                        isActive ? 'bg-primary text-on-primary' : 'bg-ground text-ink hover:bg-track'
+                      }`}
+                    >
+                      <span className="font-extrabold">{t.challenge.levels[id]}</span>
+                      <span className={`text-xs font-bold ${isActive ? 'text-on-primary' : 'text-muted'}`}>
+                        {t.challenge.bonus(TIMED_BONUS[id])}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
@@ -156,7 +228,7 @@ export default function Challenge() {
 
       <button
         type="button"
-        onClick={() => startChallenge(type)}
+        onClick={() => startChallenge(type, level)}
         className="w-full flex items-center justify-center gap-3 h-14 rounded-2xl bg-primary text-on-primary text-lg font-extrabold hover:bg-primary-hover transition-colors"
       >
         <Play fill="currentColor" size={20} />

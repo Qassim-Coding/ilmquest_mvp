@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { RotateCcw, ArrowLeft, ArrowLeftRight, Check } from 'lucide-react';
+import { RotateCcw, ArrowLeft, ArrowRight, ArrowLeftRight, Check } from 'lucide-react';
 import { namesOfAllah } from '../data/names';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLevel, XP_PER_CARD } from '../lib/learning';
 import { FlashcardSide } from '../types';
 import { LEVEL_PILL } from '../lib/levelStyles';
+import { useArabic } from '../lib/arabic';
 
 interface FlashcardsProps {
   /** Nom à afficher en premier (depuis « Voir en carte » sur une fiche) */
@@ -18,6 +19,7 @@ const SIDES: FlashcardSide[] = ['arabic', 'transliteration', 'meaning'];
 export default function Flashcards({ startId = null }: FlashcardsProps) {
   const { progress, recordAnswer } = useProgress();
   const { language, t } = useLanguage();
+  const arabic = useArabic();
   const [currentIndex, setCurrentIndex] = useState(() => {
     const index = startId === null ? -1 : namesOfAllah.findIndex(name => name.id === startId);
     return index >= 0 ? index : 0;
@@ -53,7 +55,7 @@ export default function Flashcards({ startId = null }: FlashcardsProps) {
       case 'arabic':
         return (
           <p lang="ar" dir="rtl" className={`arabic-text text-6xl md:text-7xl font-bold ${onHero ? 'text-on-hero' : 'text-arabic'}`}>
-            {currentName.arabic}
+            {arabic(currentName)}
           </p>
         );
       case 'transliteration':
@@ -65,7 +67,7 @@ export default function Flashcards({ startId = null }: FlashcardsProps) {
 
   const renderExtra = (side: FlashcardSide) => {
     if (side === 'arabic') {
-      return <p lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-hero-muted">{currentName.arabic}</p>;
+      return <p lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-hero-muted">{arabic(currentName)}</p>;
     }
     return (
       <p className="text-lg font-semibold text-hero-muted">
@@ -185,14 +187,23 @@ export default function Flashcards({ startId = null }: FlashcardsProps) {
         </button>
       </div>
 
-      <div className="flex justify-center">
+      {/* Navigation libre : passer d'une carte à l'autre sans noter de réponse (la maîtrise ne bouge pas) */}
+      <div className="flex items-center justify-between">
         <button
           type="button"
           onClick={() => goTo(currentIndex - 1)}
-          className="flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-bold text-muted hover:bg-track"
+          className="flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-bold text-muted hover:bg-track hover:text-ink transition-colors"
         >
           <ArrowLeft size={18} />
           {t.cards.prev}
+        </button>
+        <button
+          type="button"
+          onClick={() => goTo(currentIndex + 1)}
+          className="flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-bold text-muted hover:bg-track hover:text-ink transition-colors"
+        >
+          {t.cards.next}
+          <ArrowRight size={18} />
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { namesOfAllah } from '../data/names';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { daysUntilReview, getLevel, getNameById, LEVEL_ORDER } from '../lib/learning';
+import { useArabic } from '../lib/arabic';
 
 interface NameDetailProps {
   id: number;
@@ -17,6 +18,7 @@ interface NameDetailProps {
 export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onReview }: NameDetailProps) {
   const { progress, toggleFavorite, setNote } = useProgress();
   const { language, t } = useLanguage();
+  const arabic = useArabic();
 
   const name = getNameById(id);
   if (!name) return null;
@@ -66,7 +68,7 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
           <rect x="5" y="5" width="14" height="14" rx="1.5" />
           <rect x="5" y="5" width="14" height="14" rx="1.5" transform="rotate(45 12 12)" />
         </svg>
-        <p lang="ar" dir="rtl" className="relative arabic-text text-6xl font-bold text-on-hero">{name.arabic}</p>
+        <p lang="ar" dir="rtl" className="relative arabic-text text-6xl font-bold text-on-hero">{arabic(name)}</p>
         <p className="relative mt-1 text-2xl font-extrabold text-on-hero">{name.transliteration}</p>
         <p className="relative text-lg font-semibold text-hero-muted">{name.meaning[language]}</p>
       </section>

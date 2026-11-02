@@ -7,6 +7,9 @@ interface PreferencesContextType {
   setIsDarkMode: (isDark: boolean) => void;
   textSize: TextSize;
   setTextSize: (size: TextSize) => void;
+  /** Affiche les noms en arabe avec leurs voyelles (harakat) */
+  showVowels: boolean;
+  setShowVowels: (show: boolean) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
@@ -20,6 +23,9 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   const [textSize, setTextSize] = useState<TextSize>(() => {
     return (localStorage.getItem('99names_textsize') as TextSize) || 'md';
   });
+
+  // Voyelles affichées par défaut ; l'utilisateur peut les masquer dans les Paramètres
+  const [showVowels, setShowVowels] = useState(() => localStorage.getItem('99names_vowels') !== 'off');
 
   useEffect(() => {
     localStorage.setItem('99names_theme', isDarkMode ? 'dark' : 'light');
@@ -37,8 +43,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     document.documentElement.style.fontSize = sizeMap[textSize];
   }, [textSize]);
 
+  useEffect(() => {
+    localStorage.setItem('99names_vowels', showVowels ? 'on' : 'off');
+  }, [showVowels]);
+
   return (
-    <PreferencesContext.Provider value={{ isDarkMode, setIsDarkMode, textSize, setTextSize }}>
+    <PreferencesContext.Provider value={{ isDarkMode, setIsDarkMode, textSize, setTextSize, showVowels, setShowVowels }}>
       {children}
     </PreferencesContext.Provider>
   );

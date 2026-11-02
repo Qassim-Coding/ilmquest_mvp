@@ -3,12 +3,11 @@ import { motion } from 'motion/react';
 import { Check, X, ArrowRight, RotateCcw, Zap, Timer } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
-import { buildOptions, getNameById, QuizOption, XP_PER_CORRECT } from '../lib/learning';
-import { AnswerRecord, DivineName, ReviewMode } from '../types';
+import { buildOptions, getNameById, QuizOption, TIMED_BONUS, TIMED_SECONDS, XP_PER_CORRECT } from '../lib/learning';
+import { useArabic } from '../lib/arabic';
+import { AnswerRecord, DivineName, ReviewMode, TimedLevel } from '../types';
 import QuizResults from './QuizResults';
 
-const TIMED_SECONDS = 60;
-const TIMED_BONUS_SECONDS = 2;
 const LETTERS = ['A', 'B', 'C', 'D'];
 
 interface QuizEngineProps {
@@ -16,8 +15,10 @@ interface QuizEngineProps {
   mode: ReviewMode;
   /** Noms à interroger, dans l'ordre (déjà tirés au hasard par l'écran appelant) */
   questionIds: number[];
-  /** Défi « Contre la montre » : 60 s, +2 s par bonne réponse */
+  /** Défi « Contre la montre » : 60 s au départ, puis des secondes en plus à chaque bonne réponse */
   timed?: boolean;
+  /** Difficulté du « Contre la montre » : facile +6 s, moyen +4 s, difficile +2 s */
+  timedLevel?: TimedLevel;
   onComplete?: (score: number, total: number) => void;
   onStop: () => void;
   onRestart: () => void;
@@ -29,18 +30,21 @@ export default function QuizEngine({
   mode,
   questionIds,
   timed = false,
+  timedLevel = 'medium',
   onComplete,
   onStop,
   onRestart,
   onReviewMistakes,
 }: QuizEngineProps) {
   const { language, t } = useLanguage();
+  const arabic = useArabic();
   const { progress, recordAnswer } = useProgress();
   const questions = useMemo(
     () => questionIds.map(id => getNameById(id)).filter((name): name is DivineName => name !== undefined),
     [questionIds]
   );
   const reverse = mode === 'reverse';
+  const bonusSeconds = TIMED_BONUS[timedLevel];
 
   const [index, setIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -108,7 +112,7 @@ export default function QuizEngine({
     setCombo(value => (correct ? value + 1 : 0));
     if (correct) setXpGained(value => value + XP_PER_CORRECT);
     if (timed) {
-      if (correct) setTimeLeft(seconds => seconds + TIMED_BONUS_SECONDS);
+      if (correct) setTimeLeft(seconds => seconds + bonusSeconds);
       window.setTimeout(goNext, 650);
     }
   };
@@ -121,6 +125,7 @@ export default function QuizEngine({
       <QuizResults
         label={label}
         timed={timed}
+        timedLevel={timedLevel}
         answers={answers}
         total={total}
         xpGained={xpGained}
@@ -136,7 +141,12 @@ export default function QuizEngine({
   const hasAnswered = selectedId !== null;
   const isCorrect = hasAnswered && selectedId === current.id;
   const isLast = index === questions.length - 1;
-  const modeLabel = kind === 'challenge' ? (timed ? t.challenge.timed : t.challenge.title) : t.qcm.modes[mode].label;
+  const modeLabel =
+    kind === 'challenge'
+      ? timed
+        ? `${t.challenge.timed} · ${t.challenge.levels[timedLevel]}`
+        : t.challenge.title
+      : t.qcm.modes[mode].label;
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
@@ -181,6 +191,8 @@ export default function QuizEngine({
         <span className="shrink-0 flex items-center gap-1 text-sm font-extrabold text-muted">
           {timed ? (
             <>
+              {/* Les secondes gagnées s'affichent le temps de passer à la question suivante */}
+              {isCorrect && <span className="text-primary">{t.challenge.bonus(bonusSeconds)}</span>}
               <Timer size={16} />
               {t.challenge.timeLeft(timeLeft)}
             </>
@@ -215,7 +227,7 @@ export default function QuizEngine({
           </>
         ) : (
           <>
-            <p lang="ar" dir="rtl" className="relative arabic-text text-6xl font-bold text-arabic">{current.arabic}</p>
+            <p lang="ar" dir="rtl" className="relative arabic-text text-6xl font-bold text-arabic">{arabic(current)}</p>
             <p className="relative text-xl font-extrabold text-ink">{current.transliteration}</p>
             <p className="relative mt-4 font-semibold text-muted">{t.qcm.meaningQuestion}</p>
           </>
@@ -252,7 +264,7 @@ export default function QuizEngine({
               {option.arabic ? (
                 <span className="flex-1 min-w-0 flex items-center justify-between gap-3">
                   <span className="font-bold">{option.label}</span>
-                  <span lang="ar" dir="rtl" className="arabic-text text-2xl font-bold">{option.arabic}</span>
+                  <span lang="ar" dir="rtl" className="arabic-text text-2xl font-bold">{arabic({ id: option.id, arabic: option.arabic })}</span>
                 </span>
               ) : (
                 <span className="flex-1 font-bold text-lg">{option.label}</span>

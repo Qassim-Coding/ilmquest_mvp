@@ -1,0 +1,18 @@
+IlmQuest - Etape 3 : police arabe, voyelles, icone
+====================================================
+
+Ce dossier reprend l'arborescence du projet : chaque fichier va au meme
+chemin dans ilmquest_mvp (remplacer l'existant). names.ts n'est pas touche.
+
+1. Sur la branche refonte, dans le dossier du projet :
+     npm install @fontsource/noto-naskh-arabic
+     npm uninstall @fontsource-variable/noto-sans-arabic
+
+2. Copier le contenu de ce dossier a la racine du projet
+   (ou, a la place : git apply refonte-etape3.patch)
+
+3. Verifier :
+     npm run lint
+     npm run dev
+
+4. Ne pas pousser tant que les 99 formes vocalisees ne sont pas validees.

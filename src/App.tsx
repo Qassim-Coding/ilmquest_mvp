@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Layers, Target, List, Settings as SettingsIcon, Home as HomeIcon, Star } from 'lucide-react';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
@@ -66,8 +66,12 @@ function MainApp() {
     switch (activeTab) {
       case 'home': return <Home onNavigate={goTo} onOpenName={openName} onStartReview={startQcm} />;
       case 'list': return <NamesList onOpenName={openName} />;
-      case 'flashcards': return <Flashcards key={cardsStartId ?? 'cards'} startId={cardsStartId} />;
-      case 'qcm': return <Qcm key={qcmPreset?.nonce ?? 'qcm'} preset={qcmPreset} />;
+      // La clé sur Fragment relance l'écran quand on arrive avec un nouveau nom ou un nouveau réglage.
+      // Elle est posée sur Fragment et pas sur le composant : sans @types/react, TypeScript refuse « key » sur nos composants.
+      case 'flashcards':
+        return <Fragment key={cardsStartId ?? 'cards'}><Flashcards startId={cardsStartId} /></Fragment>;
+      case 'qcm':
+        return <Fragment key={qcmPreset?.nonce ?? 'qcm'}><Qcm preset={qcmPreset} /></Fragment>;
       case 'challenge': return <Challenge />;
       case 'settings': return <Settings onBack={() => goTo('home')} />;
     }
@@ -96,9 +100,7 @@ function MainApp() {
             className="flex items-center gap-2.5 rounded-xl"
             aria-label={t.nav.home}
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary text-on-primary">
-              <BookOpen size={20} />
-            </span>
+            <img src="/icon.svg" alt="" width={36} height={36} className="w-9 h-9 rounded-xl" />
             <span className="text-xl font-extrabold tracking-tight text-ink">{t.appTitle}</span>
           </button>
           <div className="flex items-center gap-2">

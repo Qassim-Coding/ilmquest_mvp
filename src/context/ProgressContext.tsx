@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { NameStat, UserProgress } from '../types';
+import { NameStat, TimedLevel, UserProgress } from '../types';
 import { applyAnswer, computeEarnedBadges, dayKey, MASTERED_BOX } from '../lib/learning';
 
 interface ProgressContextType {
   progress: UserProgress;
   markAsMastered: (id: number) => void;
   unmarkAsMastered: (id: number) => void;
-  saveChallengeScore: (score: number, total: number, timed?: boolean) => void;
+  /** level : difficulté du « Contre la montre » (enregistrée seulement pour ce défi) */
+  saveChallengeScore: (score: number, total: number, timed?: boolean, level?: TimedLevel) => void;
   resetProgress: () => void;
   /** Enregistre une réponse (QCM, Défi, Cartes) : maîtrise, erreurs, XP et jour d'étude */
   recordAnswer: (id: number, correct: boolean, xp?: number) => void;
@@ -143,11 +144,14 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const saveChallengeScore = (score: number, total: number, timed: boolean = false) => {
+  const saveChallengeScore = (score: number, total: number, timed: boolean = false, level?: TimedLevel) => {
     update(prev => ({
       ...prev,
       // timed est toujours écrit (true ou false) : il distingue aussi les scores corrigés des anciens
-      challengeScores: [...prev.challengeScores, { date: Date.now(), score, total, timed }],
+      challengeScores: [
+        ...prev.challengeScores,
+        timed && level ? { date: Date.now(), score, total, timed, level } : { date: Date.now(), score, total, timed },
+      ],
     }));
   };
 

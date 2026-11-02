@@ -104,14 +104,15 @@
 
 /* ------------------------------------------------------------------
    3. POLICES ET GRIS
-   Polices : Plus Jakarta Sans (interface) et Noto Sans Arabic (arabe),
-   chargées dans src/main.tsx.
+   Polices : Plus Jakarta Sans (interface) et Noto Naskh Arabic (arabe),
+   chargées dans src/main.tsx. Noto Naskh Arabic est une écriture naskh
+   lisible avec ou sans voyelles (harakat).
    Les gris « stone » de Tailwind sont teintés de vert, au cas où un
    écran les utilise encore.
    ------------------------------------------------------------------ */
 @theme {
-  --font-sans: "Plus Jakarta Sans Variable", "Noto Sans Arabic Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: "Noto Sans Arabic Variable", "Noto Sans Arabic", sans-serif;
+  --font-sans: "Plus Jakarta Sans Variable", "Noto Naskh Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "Noto Naskh Arabic", serif;
 
   --color-stone-50: #F3F8F5;
   --color-stone-100: #E6EFEA;
@@ -147,10 +148,11 @@
   }
 }
 
-/* Noms en arabe : toujours avec dir="rtl" et lang="ar" sur l'élément */
+/* Noms en arabe : toujours avec dir="rtl" et lang="ar" sur l'élément.
+   L'interligne laisse la place aux voyelles au-dessus et au-dessous des lettres. */
 .arabic-text {
   font-family: var(--font-arabic);
-  line-height: 1.5;
+  line-height: 1.7;
 }
 
 /* Retournement 3D des cartes */

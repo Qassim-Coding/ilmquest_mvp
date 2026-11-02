@@ -22,6 +22,9 @@ export interface NameStat {
   history: boolean[];
 }
 
+/** Difficulté du défi « Contre la montre » : secondes gagnées par bonne réponse (6, 4 ou 2) */
+export type TimedLevel = 'easy' | 'medium' | 'hard';
+
 export interface ChallengeScore {
   date: number;
   score: number;
@@ -31,6 +34,11 @@ export interface ChallengeScore {
    * Absent dans les scores enregistrés avant la refonte.
    */
   timed?: boolean;
+  /**
+   * Difficulté, seulement pour « Contre la montre ».
+   * Absente dans les scores d'avant les niveaux : ils se jouaient à +2 s, donc en « difficile ».
+   */
+  level?: TimedLevel;
 }
 
 /**

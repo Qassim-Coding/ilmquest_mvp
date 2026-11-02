@@ -2,7 +2,7 @@
 // révision espacée, niveaux de maîtrise, choix des questions, badges et objectifs.
 // Aucune donnée n'est modifiée ici : ce ne sont que des fonctions de calcul.
 import { namesOfAllah } from '../data/names';
-import { DivineName, MasteryLevel, NameStat, ReviewMode, UserProgress } from '../types';
+import { ChallengeScore, DivineName, MasteryLevel, NameStat, ReviewMode, TimedLevel, UserProgress } from '../types';
 import { Language } from '../i18n/translations';
 
 export const TOTAL_NAMES = 99;
@@ -17,6 +17,20 @@ const INTERVAL_DAYS = [0, 1, 2, 4, 7, 15, 30];
 export const XP_PER_CORRECT = 10;
 export const XP_PER_CARD = 5;
 export const QUESTION_COUNTS = [10, 20, 30, 50, 99];
+
+/** Contre la montre : temps de départ, puis secondes gagnées par bonne réponse selon la difficulté */
+export const TIMED_SECONDS = 60;
+export const TIMED_LEVELS: TimedLevel[] = ['easy', 'medium', 'hard'];
+export const TIMED_BONUS: Record<TimedLevel, number> = { easy: 6, medium: 4, hard: 2 };
+
+/**
+ * Meilleur nombre de noms trouvés en « Contre la montre » pour une difficulté.
+ * Les scores d'avant les niveaux (sans `level`) se jouaient à +2 s : ils comptent en « difficile ».
+ */
+export function timedRecord(scores: ChallengeScore[], level: TimedLevel): number {
+  const matching = scores.filter(s => s.timed === true && (s.level ?? 'hard') === level);
+  return matching.length > 0 ? Math.max(...matching.map(s => s.score)) : 0;
+}
 
 /** Mélange une copie du tableau (Fisher-Yates) */
 export function shuffle<T>(items: T[]): T[] {
