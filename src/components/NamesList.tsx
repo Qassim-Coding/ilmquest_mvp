@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Search, Heart } from 'lucide-react';
-import { namesOfAllah } from '../data/names';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { countByLevel, getLevel } from '../lib/learning';
-import { LEVEL_PILL } from '../lib/levelStyles';
+import { LEVEL_PILL, LIST_PILL } from '../lib/levelStyles';
+import { useActiveNames } from '../lib/activeNames';
 import { useArabic } from '../lib/arabic';
 import { matchesSearch } from '../lib/search';
 
@@ -20,12 +20,15 @@ export default function NamesList({ onOpenName }: NamesListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<ListFilter>('all');
   const arabic = useArabic();
+  const { choice, names } = useActiveNames();
 
-  const { mastered, learning, toDiscover } = countByLevel(progress);
+  const { mastered, learning, toDiscover, total } = countByLevel(progress, names);
+  // Numéro de chaque nom dans la liste suivie (sa place dans cette liste, pas son id)
+  const positions = new Map(names.map((name, index) => [name.id, index + 1]));
 
   // Recherche tolérante (voir src/lib/search.ts) : sans accents ni signes, avec ou sans article,
   // et en arabe avec ou sans voyelles. « Rahim » trouve Ar-Rahîm.
-  const filteredNames = namesOfAllah.filter(name => {
+  const filteredNames = names.filter(name => {
     if (!matchesSearch(name, searchTerm, language)) return false;
     const level = getLevel(progress, name.id);
     if (filter === 'mastered') return level === 'mastered';
@@ -35,7 +38,7 @@ export default function NamesList({ onOpenName }: NamesListProps) {
   });
 
   const filters: { id: ListFilter; label: string }[] = [
-    { id: 'all', label: t.list.all },
+    { id: 'all', label: t.list.all(total) },
     { id: 'mastered', label: t.list.mastered },
     { id: 'learning', label: t.list.learning },
     { id: 'favorites', label: t.list.favorites },
@@ -44,7 +47,7 @@ export default function NamesList({ onOpenName }: NamesListProps) {
   return (
     <div className="max-w-xl mx-auto space-y-4">
       <div className="space-y-1 px-1">
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink">{t.list.title}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink">{t.list.title(total)}</h1>
         <p className="text-sm font-medium text-muted">{t.list.summary(mastered, learning, toDiscover)}</p>
       </div>
 
@@ -97,12 +100,18 @@ export default function NamesList({ onOpenName }: NamesListProps) {
                   className="w-full flex items-center gap-3 min-h-[4.5rem] py-2.5 pl-2.5 pr-4 rounded-2xl bg-surface border border-line text-left hover:border-primary/40 transition-colors"
                 >
                   <span className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-ground text-sm font-extrabold text-muted">
-                    #{name.id}
+                    #{positions.get(name.id)}
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="flex items-center gap-1.5">
                       <span className="font-extrabold text-ink truncate">{name.transliteration}</span>
                       {isFavorite && <Heart size={14} className="shrink-0 fill-danger text-danger" aria-hidden="true" />}
+                      {/* Les deux listes réunies : on signale les noms qui n'appartiennent qu'à une liste */}
+                      {choice === 'all' && name.lists.length === 1 && (
+                        <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-xs font-extrabold ${LIST_PILL[name.lists[0]]}`}>
+                          {t.list.onlyIn[name.lists[0]]}
+                        </span>
+                      )}
                     </span>
                     <span className="block text-sm font-medium text-muted">{name.meaning[language]}</span>
                   </span>

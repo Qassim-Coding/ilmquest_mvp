@@ -1,9 +1,11 @@
-import React from 'react';
-import { ChevronLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { getNameById } from '../lib/learning';
 import { useArabic } from '../lib/arabic';
+import { getListNames, NAME_LIST_CHOICES } from '../data/nameLists';
+import AboutLists from './AboutLists';
 
 interface SettingsProps {
   onBack: () => void;
@@ -17,9 +19,20 @@ const THEME_PREVIEWS = {
 
 export default function Settings({ onBack }: SettingsProps) {
   const { language, setLanguage, t } = useLanguage();
-  const { isDarkMode, setIsDarkMode, textSize, setTextSize, showVowels, setShowVowels } = usePreferences();
+  const { isDarkMode, setIsDarkMode, textSize, setTextSize, showVowels, setShowVowels, nameList, setNameList } = usePreferences();
   const arabic = useArabic();
   const sample = getNameById(3);
+  // Page « Pourquoi deux listes ? », ouverte depuis la section Liste des Noms
+  const [showAbout, setShowAbout] = useState(false);
+
+  const openAbout = () => {
+    setShowAbout(true);
+    window.scrollTo(0, 0);
+  };
+
+  if (showAbout) {
+    return <AboutLists onBack={() => setShowAbout(false)} />;
+  }
 
   const themes = [
     { dark: false, label: t.settings.light, sub: t.settings.lightSub, colors: THEME_PREVIEWS.light },
@@ -44,6 +57,52 @@ export default function Settings({ onBack }: SettingsProps) {
         </button>
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">{t.settings.title}</h1>
       </div>
+
+      {/* Liste des Noms : les savants n'ont pas tous retenu la même liste de 99 noms */}
+      <section className="space-y-2.5">
+        <div className="px-1">
+          <h2 className="font-extrabold text-ink">{t.settings.nameList}</h2>
+          <p className="text-sm font-medium text-muted">{t.settings.nameListHint}</p>
+        </div>
+        <div role="radiogroup" aria-label={t.settings.nameList} className="space-y-2">
+          {NAME_LIST_CHOICES.map(choice => {
+            const isActive = nameList === choice;
+            const option = t.settings.listOptions[choice];
+            return (
+              <button
+                key={choice}
+                type="button"
+                role="radio"
+                aria-checked={isActive}
+                onClick={() => setNameList(choice)}
+                className={`w-full flex items-center justify-between gap-3 min-h-[3.5rem] px-4 py-2.5 rounded-2xl border-2 bg-surface text-left transition-colors ${
+                  isActive ? 'border-primary' : 'border-line'
+                }`}
+              >
+                <span>
+                  <span className="block font-extrabold text-ink">{option.title}</span>
+                  <span className="block text-xs font-semibold text-muted">{option.sub(getListNames(choice).length)}</span>
+                </span>
+                <span
+                  className={`w-5 h-5 shrink-0 rounded-full ${isActive ? 'border-[6px] border-primary' : 'border-2 border-line'}`}
+                  aria-hidden="true"
+                />
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={openAbout}
+          className="w-full flex items-center justify-between gap-3 h-12 px-4 rounded-2xl bg-soft text-soft-ink font-extrabold"
+        >
+          <span className="flex items-center gap-2">
+            <BookOpen size={18} />
+            {t.settings.aboutLists}
+          </span>
+          <ChevronRight size={18} />
+        </button>
+      </section>
 
       {/* Thème */}
       <section className="space-y-2.5">

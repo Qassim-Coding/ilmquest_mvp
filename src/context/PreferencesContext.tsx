@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { NameListChoice } from '../types';
+import { DEFAULT_NAME_LIST, isNameListChoice } from '../data/nameLists';
 
 type TextSize = 'sm' | 'md' | 'lg';
 
@@ -10,6 +12,9 @@ interface PreferencesContextType {
   /** Affiche les noms en arabe avec leurs voyelles (harakat) */
   showVowels: boolean;
   setShowVowels: (show: boolean) => void;
+  /** Liste de noms suivie dans toute l'app (Liste, Cartes, QCM, Défi, progression) */
+  nameList: NameListChoice;
+  setNameList: (list: NameListChoice) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined);
@@ -26,6 +31,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   // Voyelles affichées par défaut ; l'utilisateur peut les masquer dans les Paramètres
   const [showVowels, setShowVowels] = useState(() => localStorage.getItem('99names_vowels') !== 'off');
+
+  // Liste d'origine par défaut : rien ne change pour les utilisateurs actuels tant qu'ils ne choisissent pas
+  const [nameList, setNameList] = useState<NameListChoice>(() => {
+    const saved = localStorage.getItem('99names_list');
+    return isNameListChoice(saved) ? saved : DEFAULT_NAME_LIST;
+  });
 
   useEffect(() => {
     localStorage.setItem('99names_theme', isDarkMode ? 'dark' : 'light');
@@ -47,8 +58,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     localStorage.setItem('99names_vowels', showVowels ? 'on' : 'off');
   }, [showVowels]);
 
+  useEffect(() => {
+    localStorage.setItem('99names_list', nameList);
+  }, [nameList]);
+
   return (
-    <PreferencesContext.Provider value={{ isDarkMode, setIsDarkMode, textSize, setTextSize, showVowels, setShowVowels }}>
+    <PreferencesContext.Provider value={{ isDarkMode, setIsDarkMode, textSize, setTextSize, showVowels, setShowVowels, nameList, setNameList }}>
       {children}
     </PreferencesContext.Provider>
   );

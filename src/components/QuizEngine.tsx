@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { Check, X, ArrowRight, RotateCcw, Zap, Timer } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
-import { buildOptions, getNameById, QuizOption, TIMED_BONUS, TIMED_SECONDS, XP_PER_CORRECT } from '../lib/learning';
+import { buildOptions, countByLevel, getNameById, QuizOption, TIMED_BONUS, TIMED_SECONDS, XP_PER_CORRECT } from '../lib/learning';
+import { useActiveNames } from '../lib/activeNames';
 import { useArabic } from '../lib/arabic';
 import { AnswerRecord, DivineName, ReviewMode, TimedLevel } from '../types';
 import QuizResults from './QuizResults';
@@ -54,7 +55,9 @@ export default function QuizEngine({
   const [timeLeft, setTimeLeft] = useState(TIMED_SECONDS);
   const [isFinished, setIsFinished] = useState(false);
   // État de départ, pour comparer en fin de QCM (noms acquis, badges)
-  const [start] = useState(() => ({ mastered: progress.masteredNames.length, badges: progress.earnedBadges }));
+  const { names } = useActiveNames();
+  // Noms acquis dans la liste suivie au début du quiz (pour « Noms acquis » et les objectifs)
+  const [start] = useState(() => ({ mastered: countByLevel(progress, names).mastered, badges: progress.earnedBadges }));
   const reported = useRef(false);
   const feedbackRef = useRef<HTMLDivElement>(null);
 
@@ -64,8 +67,8 @@ export default function QuizEngine({
 
   // Nouvelles réponses à chaque question (et si la langue change)
   const options: QuizOption[] = useMemo(
-    () => (current ? buildOptions(current, reverse, language) : []),
-    [current?.id, reverse, language]
+    () => (current ? buildOptions(current, reverse, language, names) : []),
+    [current?.id, reverse, language, names]
   );
 
   // Chrono du défi « Contre la montre »

@@ -20,6 +20,7 @@ export const translations = {
       dailyReview: "Révision du jour",
       dueNames: (n: number) => `${n} ${plural(n, "nom à revoir", "noms à revoir")}`,
       nothingDue: "Rien à revoir pour l'instant",
+      followedList: (label: string) => `Liste suivie : ${label}`,
       review: "Réviser",
       practice: "S'entraîner",
       features: "Que souhaitez-vous faire ?",
@@ -33,13 +34,14 @@ export const translations = {
       tileChallenge: "Tester vos connaissances"
     },
     list: {
-      title: "Les 99 Noms d'Allah",
+      title: (total: number) => (total === 99 ? "Les 99 Noms d'Allah" : "Les Noms d'Allah"),
       search: "Rechercher un nom...",
       searchLabel: "Rechercher un nom",
       summary: (mastered: number, learning: number, toDiscover: number) =>
         `${mastered} acquis · ${learning} en cours · ${toDiscover} à découvrir`,
       filterLabel: "Filtrer",
-      all: "Tous · 99",
+      all: (total: number) => `Tous · ${total}`,
+      onlyIn: { ilmquest: "Ajib.fr", tirmidhi: "Tirmidhî" },
       mastered: "Acquis",
       learning: "En cours",
       favorites: "Favoris",
@@ -48,7 +50,13 @@ export const translations = {
     },
     detail: {
       back: "Retour à la liste",
-      position: (id: number) => `Nom ${id} / 99`,
+      position: (index: number, total: number) => `Nom ${index} / ${total}`,
+      inLists: "Présent dans",
+      onlyIn: {
+        ilmquest: "Ce nom ne figure pas dans la liste de Tirmidhî.",
+        tirmidhi: "Ce nom ne figure pas dans la liste Ajib.fr."
+      },
+      notInList: "Ce nom ne fait pas partie de la liste que vous suivez.",
       addFavorite: "Ajouter aux favoris",
       removeFavorite: "Retirer des favoris",
       previous: "Nom précédent",
@@ -105,7 +113,7 @@ export const translations = {
       countTitle: "Nombre de noms",
       random: "Tirés au hasard",
       helper: {
-        all: "Les noms sont tirés au hasard parmi les 99.",
+        all: (total: number) => `Les noms sont tirés au hasard parmi les ${total} de votre liste.`,
         smart: "Les noms à revoir passent en premier, le reste est tiré au hasard.",
         mistakes: (n: number) => `Tirés au hasard parmi vos noms ratés (${n} pour l'instant).`,
         favorites: (n: number) => `Tirés au hasard parmi vos favoris (${n} pour l'instant).`
@@ -159,8 +167,8 @@ export const translations = {
       accuracy: "Précision",
       newMastered: "Noms acquis",
       objectives: "Vos objectifs",
-      masteredCount: (n: number) => `${n} / 99 noms acquis`,
-      objective: (percent: number) => percent === 100 ? "Les 99 Noms appris" : `${percent} % des Noms appris`,
+      masteredCount: (n: number, total: number) => `${n} / ${total} noms acquis`,
+      objective: (percent: number, total: number) => (percent === 100 ? `Les ${total} Noms appris` : `${percent} % des Noms appris`),
       reached: "Atteint !",
       newBadges: "Nouveau badge",
       toReview: (n: number) => `À revoir (${n})`,
@@ -176,8 +184,35 @@ export const translations = {
       vowels: "Voyelles arabes",
       vowelsHint: "Affichez ou masquez les voyelles (harakat) sur les noms en arabe.",
       vowelsOn: "Avec voyelles", vowelsOff: "Sans voyelles",
+      nameList: "Liste des Noms",
+      nameListHint: "Les savants n'ont pas tous retenu la même liste de 99 noms. L'app suit par défaut la liste de Tirmidhî, la plus répandue.",
+      listOptions: {
+        tirmidhi: { title: "Liste de Tirmidhî", sub: (total: number) => `${total} noms · liste de référence de l'app` },
+        ilmquest: { title: "Liste Ajib.fr", sub: (total: number) => `${total} noms · ancienne liste de l'app, source en cours de vérification` },
+        all: { title: "Les deux listes", sub: (total: number) => `${total} noms · tous les noms réunis` }
+      },
+      aboutLists: "Pourquoi deux listes ?",
       preview: "Aperçu",
       back: "Retour"
+    },
+    listNames: { ilmquest: "Liste Ajib.fr", tirmidhi: "Liste de Tirmidhî", all: "Les deux listes" },
+    about: {
+      title: "Pourquoi deux listes ?",
+      back: "Retour aux paramètres",
+      hadithTitle: "Le hadith des 99 noms",
+      hadith: "Le Prophète ﷺ a dit : « Allah a quatre-vingt-dix-neuf noms, cent moins un. Celui qui les dénombre entrera au Paradis. »",
+      hadithRef: "Rapporté par al-Bukhârî (n° 2736) et Muslim (n° 2677).",
+      hadithNote: "Ce hadith authentique ne donne pas la liste des noms. Les savants les ont donc recherchés dans le Coran et la Sunna, et leurs listes ne sont pas toutes identiques.",
+      tirmidhiTitle: "La liste de Tirmidhî",
+      tirmidhi: "C'est la liste la plus connue, et la liste de référence de l'app. Elle vient d'une version du hadith rapportée par at-Tirmidhî (n° 3507), qui énumère les noms. Plusieurs spécialistes du hadith, dont Ibn Hajar, estiment que cette énumération a été ajoutée par un transmetteur et ne vient pas du Prophète ﷺ. Elle reste la plus utilisée.",
+      ilmquestTitle: "La liste Ajib.fr",
+      ilmquest: "C'est l'ancienne liste de l'app. Elle est reprise du site francophone Ajib.fr (« Les 99 noms d'Allah Azawajal et leurs significations »), qui ne précise pas de quel savant elle provient : sa source est en cours de vérification. Elle contient des noms présents dans le Coran et dans des hadiths authentiques, dont certains absents de la liste de Tirmidhî, comme As-Sitîr, Ar-Rafîq ou At-Tayyib.",
+      numbersTitle: "En chiffres",
+      numberLabels: { shared: "en commun", ilmquest: "Ajib.fr seule", tirmidhi: "Tirmidhî seule" },
+      numbers: (shared: number, ownIlmquest: number, ownTirmidhi: number) =>
+        `${shared} noms sont communs aux deux listes. ${ownIlmquest} ne figurent que dans la liste Ajib.fr, ${ownTirmidhi} que dans la liste de Tirmidhî.`,
+      inAppTitle: "Dans l'app",
+      inApp: "Par défaut, l'app suit la liste de Tirmidhî. Vous pouvez en changer dans Paramètres : la Liste, les Cartes, le QCM, le Défi et votre progression s'y adaptent. Sur la fiche de chaque nom, une pastille indique dans quelle liste il figure. Changer de liste ne fait rien perdre : les noms communs gardent leur progression."
     }
   },
   en: {
@@ -199,6 +234,7 @@ export const translations = {
       dailyReview: "Today's review",
       dueNames: (n: number) => `${n} ${plural(n, "name to review", "names to review")}`,
       nothingDue: "Nothing to review right now",
+      followedList: (label: string) => `List followed: ${label}`,
       review: "Review",
       practice: "Practice",
       features: "What would you like to do?",
@@ -212,13 +248,14 @@ export const translations = {
       tileChallenge: "Test your knowledge"
     },
     list: {
-      title: "The 99 Names of Allah",
+      title: (total: number) => (total === 99 ? "The 99 Names of Allah" : "The Names of Allah"),
       search: "Search for a name...",
       searchLabel: "Search for a name",
       summary: (mastered: number, learning: number, toDiscover: number) =>
         `${mastered} mastered · ${learning} learning · ${toDiscover} to discover`,
       filterLabel: "Filter",
-      all: "All · 99",
+      all: (total: number) => `All · ${total}`,
+      onlyIn: { ilmquest: "Ajib.fr", tirmidhi: "Tirmidhi" },
       mastered: "Mastered",
       learning: "Learning",
       favorites: "Favorites",
@@ -227,7 +264,13 @@ export const translations = {
     },
     detail: {
       back: "Back to the list",
-      position: (id: number) => `Name ${id} / 99`,
+      position: (index: number, total: number) => `Name ${index} / ${total}`,
+      inLists: "Found in",
+      onlyIn: {
+        ilmquest: "This name is not in the Tirmidhi list.",
+        tirmidhi: "This name is not in the Ajib.fr list."
+      },
+      notInList: "This name is not part of the list you follow.",
       addFavorite: "Add to favorites",
       removeFavorite: "Remove from favorites",
       previous: "Previous name",
@@ -284,7 +327,7 @@ export const translations = {
       countTitle: "Number of names",
       random: "Picked at random",
       helper: {
-        all: "Names are picked at random from the 99.",
+        all: (total: number) => `Names are picked at random from the ${total} in your list.`,
         smart: "Names due for review come first, the rest are picked at random.",
         mistakes: (n: number) => `Picked at random from your missed names (${n} so far).`,
         favorites: (n: number) => `Picked at random from your favorites (${n} so far).`
@@ -338,8 +381,8 @@ export const translations = {
       accuracy: "Accuracy",
       newMastered: "Names mastered",
       objectives: "Your goals",
-      masteredCount: (n: number) => `${n} / 99 names mastered`,
-      objective: (percent: number) => percent === 100 ? "All 99 Names learned" : `${percent}% of the Names learned`,
+      masteredCount: (n: number, total: number) => `${n} / ${total} names mastered`,
+      objective: (percent: number, total: number) => (percent === 100 ? `All ${total} Names learned` : `${percent}% of the Names learned`),
       reached: "Reached!",
       newBadges: "New badge",
       toReview: (n: number) => `To review (${n})`,
@@ -355,8 +398,35 @@ export const translations = {
       vowels: "Arabic vowels",
       vowelsHint: "Show or hide the vowel marks (harakat) on the Arabic names.",
       vowelsOn: "With vowels", vowelsOff: "Without vowels",
+      nameList: "List of Names",
+      nameListHint: "Scholars did not all keep the same list of 99 names. By default, the app follows the Tirmidhi list, the most widespread.",
+      listOptions: {
+        tirmidhi: { title: "Tirmidhi list", sub: (total: number) => `${total} names · the app's reference list` },
+        ilmquest: { title: "Ajib.fr list", sub: (total: number) => `${total} names · the app's former list, source being checked` },
+        all: { title: "Both lists", sub: (total: number) => `${total} names · all names together` }
+      },
+      aboutLists: "Why two lists?",
       preview: "Preview",
       back: "Back"
+    },
+    listNames: { ilmquest: "Ajib.fr list", tirmidhi: "Tirmidhi list", all: "Both lists" },
+    about: {
+      title: "Why two lists?",
+      back: "Back to settings",
+      hadithTitle: "The hadith of the 99 names",
+      hadith: "The Prophet ﷺ said: “Allah has ninety-nine names, one hundred less one. Whoever enumerates them will enter Paradise.”",
+      hadithRef: "Narrated by al-Bukhari (no. 2736) and Muslim (no. 2677).",
+      hadithNote: "This authentic hadith does not list the names. Scholars therefore looked for them in the Qur'an and the Sunnah, and their lists are not all identical.",
+      tirmidhiTitle: "The Tirmidhi list",
+      tirmidhi: "This is the best-known list, and the app's reference list. It comes from a version of the hadith narrated by al-Tirmidhi (no. 3507), which lists the names. Several hadith specialists, including Ibn Hajar, consider that this list was added by a narrator and does not come from the Prophet ﷺ. It remains the most widely used.",
+      ilmquestTitle: "The Ajib.fr list",
+      ilmquest: "This is the app's former list. It comes from the French website Ajib.fr (“Les 99 noms d'Allah Azawajal et leurs significations”), which does not say which scholar it is based on: its source is being checked. It contains names found in the Qur'an and in authentic hadiths, some of which are not in the Tirmidhi list, such as As-Sitir, Ar-Rafiq or At-Tayyib.",
+      numbersTitle: "In numbers",
+      numberLabels: { shared: "shared", ilmquest: "Ajib.fr only", tirmidhi: "Tirmidhi only" },
+      numbers: (shared: number, ownIlmquest: number, ownTirmidhi: number) =>
+        `${shared} names are shared by both lists. ${ownIlmquest} are only in the Ajib.fr list, ${ownTirmidhi} only in the Tirmidhi list.`,
+      inAppTitle: "In the app",
+      inApp: "By default, the app follows the Tirmidhi list. You can change it in Settings: the List, Cards, Quiz, Challenge and your progress adapt to it. On each name's page, a badge shows which list it belongs to. Switching lists loses nothing: shared names keep their progress."
     }
   }
 };

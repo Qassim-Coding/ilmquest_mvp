@@ -4,6 +4,7 @@ import QuizEngine from './QuizEngine';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
 import { getDueIds, getPool, pickQuestionIds, QUESTION_COUNTS, shuffle } from '../lib/learning';
+import { useActiveNames } from '../lib/activeNames';
 import { QcmPreset, ReviewMode } from '../types';
 
 interface QcmProps {
@@ -32,6 +33,8 @@ const MODES: ReviewMode[] = ['classic', 'reverse', 'smart', 'mistakes', 'favorit
 export default function Qcm({ preset = null }: QcmProps) {
   const { t } = useLanguage();
   const { progress } = useProgress();
+  // Les questions sont tirées dans la liste choisie dans Paramètres
+  const { names } = useActiveNames();
   const [mode, setMode] = useState<ReviewMode>(preset?.mode ?? 'classic');
   const [count, setCount] = useState(10);
   const [session, setSession] = useState<Session | null>(() =>
@@ -40,8 +43,8 @@ export default function Qcm({ preset = null }: QcmProps) {
       : null
   );
 
-  const dueCount = getDueIds(progress).length;
-  const poolSize = getPool(mode, progress).length;
+  const dueCount = getDueIds(progress, names).length;
+  const poolSize = getPool(mode, progress, names).length;
   const questionCount = Math.min(count, poolSize);
 
   const startSession = (sessionMode: ReviewMode, ids: number[], fixed: boolean) => {
@@ -61,7 +64,7 @@ export default function Qcm({ preset = null }: QcmProps) {
           onRestart={() =>
             session.fixed
               ? startSession(session.mode, shuffle(session.ids), true)
-              : startSession(session.mode, pickQuestionIds(session.mode, count, progress), false)
+              : startSession(session.mode, pickQuestionIds(session.mode, count, progress, names), false)
           }
           onReviewMistakes={(ids) => startSession('classic', shuffle(ids), true)}
         />
@@ -82,7 +85,7 @@ export default function Qcm({ preset = null }: QcmProps) {
     mode === 'smart' ? t.qcm.helper.smart
       : mode === 'mistakes' ? t.qcm.helper.mistakes(poolSize)
       : mode === 'favorites' ? t.qcm.helper.favorites(poolSize)
-      : t.qcm.helper.all;
+      : t.qcm.helper.all(names.length);
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
@@ -161,7 +164,7 @@ export default function Qcm({ preset = null }: QcmProps) {
 
       <button
         type="button"
-        onClick={() => startSession(mode, pickQuestionIds(mode, count, progress), false)}
+        onClick={() => startSession(mode, pickQuestionIds(mode, count, progress, names), false)}
         disabled={poolSize === 0}
         className="w-full flex items-center justify-center gap-3 h-14 rounded-2xl bg-primary text-on-primary text-lg font-extrabold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >

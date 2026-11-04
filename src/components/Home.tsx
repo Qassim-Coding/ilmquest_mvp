@@ -2,8 +2,9 @@ import React from 'react';
 import { List, Layers, BookOpen, Target, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
-import { countByLevel, getDueIds, getNameOfTheDay, TOTAL_NAMES } from '../lib/learning';
+import { countByLevel, getDueIds, getNameOfTheDay, positionInList } from '../lib/learning';
 import { useArabic } from '../lib/arabic';
+import { useActiveNames } from '../lib/activeNames';
 import { ReviewMode, Tab } from '../types';
 
 interface HomeProps {
@@ -16,12 +17,13 @@ export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProp
   const { t, language } = useLanguage();
   const arabic = useArabic();
   const { progress } = useProgress();
+  const { choice, names } = useActiveNames();
 
-  const nameOfTheDay = getNameOfTheDay();
-  const { mastered, learning, toDiscover } = countByLevel(progress);
-  // Le dénominateur reste 99, quoi qu'il arrive
-  const percentage = Math.round((mastered / TOTAL_NAMES) * 100);
-  const dueCount = getDueIds(progress).length;
+  const nameOfTheDay = getNameOfTheDay(names);
+  // Le dénominateur est la taille de la liste suivie : 99 pour chaque liste, plus pour les deux réunies
+  const { mastered, learning, toDiscover, total } = countByLevel(progress, names);
+  const percentage = Math.round((mastered / total) * 100);
+  const dueCount = getDueIds(progress, names).length;
 
   const tiles: { tab: Tab; title: string; subtitle: string; Icon: typeof List; colors: string }[] = [
     { tab: 'list', title: t.nav.list, subtitle: t.home.tileList, Icon: List, colors: 'bg-soft text-soft-ink' },
@@ -44,7 +46,7 @@ export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProp
           <rect x="5" y="5" width="14" height="14" rx="1.5" transform="rotate(45 12 12)" />
         </svg>
         <p className="relative text-xs font-extrabold tracking-widest uppercase text-hero-muted">
-          {t.home.nameOfTheDay} · #{nameOfTheDay.id}
+          {t.home.nameOfTheDay} · #{positionInList(names, nameOfTheDay.id)}
         </p>
         <div className="relative flex items-end justify-between gap-3">
           <div className="min-w-0">
@@ -94,7 +96,7 @@ export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProp
           <div className="flex-1 min-w-0 space-y-2">
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="font-extrabold text-ink">{t.home.progress}</h2>
-              <span className="text-sm font-semibold text-muted">{mastered} / {TOTAL_NAMES}</span>
+              <span className="text-sm font-semibold text-muted">{mastered} / {total}</span>
             </div>
             <div className="flex h-2 gap-1" aria-hidden="true">
               {mastered > 0 && <div className="rounded-full bg-primary" style={{ flexGrow: mastered }} />}
@@ -106,6 +108,7 @@ export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProp
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-accent" />{learning} {t.home.legendLearning}</span>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-track" />{toDiscover} {t.home.legendNew}</span>
             </div>
+            <p className="text-xs font-semibold text-muted">{t.home.followedList(t.listNames[choice])}</p>
           </div>
         </div>
         <div className="flex items-center justify-between gap-3 pt-4 border-t border-line">

@@ -14,6 +14,7 @@ import {
   TIMED_LEVELS,
   timedRecord,
 } from '../lib/learning';
+import { useActiveNames } from '../lib/activeNames';
 import { TimedLevel } from '../types';
 
 type ChallengeType = 'classic' | 'timed';
@@ -65,6 +66,8 @@ function remember(key: string, value: string) {
 export default function Challenge() {
   const { progress, saveChallengeScore } = useProgress();
   const { t } = useLanguage();
+  // Les questions sont tirées dans la liste choisie dans Paramètres
+  const { names } = useActiveNames();
   const [type, setType] = useState<ChallengeType>('classic');
   const [level, setLevel] = useState<TimedLevel>(loadLevel);
   const [direction, setDirection] = useState<Direction>(loadDirection);
@@ -84,8 +87,8 @@ export default function Challenge() {
   const startChallenge = (challengeType: ChallengeType, challengeLevel: TimedLevel, challengeDirection: Direction) => {
     const ids =
       challengeType === 'timed'
-        ? shuffle(getPool('classic', progress))
-        : pickQuestionIds('classic', questionCount, progress);
+        ? shuffle(getPool('classic', progress, names))
+        : pickQuestionIds('classic', questionCount, progress, names);
     setSession({
       key: Date.now(),
       kind: 'challenge',

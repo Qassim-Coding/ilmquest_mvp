@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { RotateCcw, ArrowLeft, ArrowRight, ArrowLeftRight, Check } from 'lucide-react';
-import { namesOfAllah } from '../data/names';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getLevel, XP_PER_CARD } from '../lib/learning';
 import { FlashcardSide } from '../types';
 import { LEVEL_PILL } from '../lib/levelStyles';
 import { useArabic } from '../lib/arabic';
+import { useActiveNames } from '../lib/activeNames';
 
 interface FlashcardsProps {
   /** Nom à afficher en premier (depuis « Voir en carte » sur une fiche) */
@@ -20,22 +20,25 @@ export default function Flashcards({ startId = null }: FlashcardsProps) {
   const { progress, recordAnswer } = useProgress();
   const { language, t } = useLanguage();
   const arabic = useArabic();
+  // Les cartes suivent la liste choisie dans Paramètres
+  const { names } = useActiveNames();
   const [currentIndex, setCurrentIndex] = useState(() => {
-    const index = startId === null ? -1 : namesOfAllah.findIndex(name => name.id === startId);
+    const index = startId === null ? -1 : names.findIndex(name => name.id === startId);
     return index >= 0 ? index : 0;
   });
   const [isFlipped, setIsFlipped] = useState(false);
   const [frontSide, setFrontSide] = useState<FlashcardSide>('arabic');
   const [backSide, setBackSide] = useState<FlashcardSide>('meaning');
 
-  const currentName = namesOfAllah[currentIndex];
+  // min() : si la liste change pendant qu'on est sur l'écran, on reste dans ses bornes
+  const currentName = names[Math.min(currentIndex, names.length - 1)];
   const level = getLevel(progress, currentName.id);
   // Au verso, on montre aussi le côté qui n'est ni au recto ni au verso (ex. la translittération)
   const extraSide = SIDES.find(side => side !== frontSide && side !== backSide);
 
   const goTo = (index: number) => {
     setIsFlipped(false);
-    setCurrentIndex((index + namesOfAllah.length) % namesOfAllah.length);
+    setCurrentIndex((index + names.length) % names.length);
   };
 
   // « Je le savais » / « À revoir » : la maîtrise du nom monte ou descend, puis carte suivante
@@ -125,13 +128,13 @@ export default function Flashcards({ startId = null }: FlashcardsProps) {
       {/* Position et maîtrise */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
-          <span className="font-bold text-muted">{t.cards.name} {currentIndex + 1} / 99</span>
+          <span className="font-bold text-muted">{t.cards.name} {currentIndex + 1} / {names.length}</span>
           <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${LEVEL_PILL[level]}`}>{t.levels[level]}</span>
         </div>
         <div className="w-full h-2 rounded-full bg-track overflow-hidden">
           <motion.div
             initial={false}
-            animate={{ width: `${((currentIndex + 1) / 99) * 100}%` }}
+            animate={{ width: `${((currentIndex + 1) / names.length) * 100}%` }}
             className="h-full bg-primary"
           />
         </div>

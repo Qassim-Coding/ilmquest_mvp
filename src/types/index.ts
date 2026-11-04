@@ -1,3 +1,14 @@
+/**
+ * Listes de noms proposées dans l'app :
+ * « tirmidhi » = liste rapportée par at-Tirmidhî (n° 3507), liste de référence de l'app, suivie par défaut ;
+ * « ilmquest » = ancienne liste de l'app, reprise du site Ajib.fr (affichée « Liste Ajib.fr »), source à vérifier.
+ * L'identifiant « ilmquest » reste interne : il ne s'affiche nulle part.
+ */
+export type NameListId = 'ilmquest' | 'tirmidhi';
+
+/** Liste suivie, choisie dans Paramètres : une des deux listes, ou les deux réunies */
+export type NameListChoice = NameListId | 'all';
+
 export interface DivineName {
   id: number;
   arabic: string;
@@ -6,6 +17,8 @@ export interface DivineName {
     fr: string;
     en: string;
   };
+  /** Listes qui contiennent ce nom */
+  lists: NameListId[];
 }
 
 /** Suivi d'un nom pour la révision espacée. */

@@ -2,7 +2,8 @@ import React from 'react';
 import { Check, RotateCcw } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
-import { BADGES, getNameById, OBJECTIVES } from '../lib/learning';
+import { BADGES, countByLevel, getNameById, objectivesFor } from '../lib/learning';
+import { useActiveNames } from '../lib/activeNames';
 import { useArabic } from '../lib/arabic';
 import { AnswerRecord, TimedLevel } from '../types';
 import BadgeIcon, { badgeLabel } from './BadgeIcon';
@@ -46,11 +47,14 @@ export default function QuizResults({
   const { language, t } = useLanguage();
   const arabic = useArabic();
   const { progress } = useProgress();
+  const { names } = useActiveNames();
 
   const score = answers.filter(answer => answer.correct).length;
   const ratio = total > 0 ? score / total : 0;
   const accuracy = answers.length > 0 ? Math.round((score / answers.length) * 100) : 0;
-  const masteredAfter = progress.masteredNames.length;
+  // Noms acquis dans la liste suivie : les objectifs se calculent sur sa taille (25, 50, 80 et 99 pour 99 noms)
+  const { mastered: masteredAfter, total: listTotal } = countByLevel(progress, names);
+  const objectives = objectivesFor(listTotal);
   const newlyMastered = Math.max(0, masteredAfter - masteredBefore);
   const wrongIds = Array.from(new Set(answers.filter(answer => !answer.correct).map(answer => answer.id)));
   const newBadges = BADGES.filter(badge => progress.earnedBadges.includes(badge.id) && !badgesBefore.includes(badge.id));
@@ -110,9 +114,9 @@ export default function QuizResults({
       <section className="rounded-3xl bg-surface border border-line p-4 space-y-3">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="font-extrabold text-ink">{t.results.objectives}</h2>
-          <span className="text-sm font-semibold text-muted">{t.results.masteredCount(masteredAfter)}</span>
+          <span className="text-sm font-semibold text-muted">{t.results.masteredCount(masteredAfter, listTotal)}</span>
         </div>
-        {OBJECTIVES.map(objective => {
+        {objectives.map(objective => {
           const reached = masteredAfter >= objective.target;
           const justReached = reached && masteredBefore < objective.target;
           return (
@@ -126,7 +130,7 @@ export default function QuizResults({
               )}
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center justify-between gap-2 text-sm font-bold text-ink">
-                  <span>{t.results.objective(objective.percent)}</span>
+                  <span>{t.results.objective(objective.percent, listTotal)}</span>
                   {justReached ? (
                     <span className="px-2 py-0.5 rounded-full bg-accent-soft text-accent-ink text-xs font-extrabold">
                       {t.results.reached}

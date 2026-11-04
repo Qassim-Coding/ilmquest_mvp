@@ -1,10 +1,12 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Heart, Layers, RotateCcw } from 'lucide-react';
-import { namesOfAllah } from '../data/names';
+import { getListNames } from '../data/nameLists';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
-import { daysUntilReview, getLevel, getNameById, LEVEL_ORDER } from '../lib/learning';
+import { daysUntilReview, getLevel, getNameById, LEVEL_ORDER, positionInList } from '../lib/learning';
 import { useArabic } from '../lib/arabic';
+import { useActiveNames } from '../lib/activeNames';
+import { LIST_PILL } from '../lib/levelStyles';
 
 interface NameDetailProps {
   id: number;
@@ -19,13 +21,18 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
   const { progress, toggleFavorite, setNote } = useProgress();
   const { language, t } = useLanguage();
   const arabic = useArabic();
+  const { names } = useActiveNames();
 
   const name = getNameById(id);
   if (!name) return null;
 
-  const index = namesOfAllah.findIndex(n => n.id === id);
-  const previous = namesOfAllah[(index - 1 + namesOfAllah.length) % namesOfAllah.length];
-  const next = namesOfAllah[(index + 1) % namesOfAllah.length];
+  // On navigue dans la liste suivie ; si le nom n'en fait pas partie, dans les deux listes réunies
+  const inFollowedList = names.some(n => n.id === id);
+  const navNames = inFollowedList ? names : getListNames('all');
+  const index = navNames.findIndex(n => n.id === id);
+  const previous = navNames[(index - 1 + navNames.length) % navNames.length];
+  const next = navNames[(index + 1) % navNames.length];
+  const position = (nameId: number) => positionInList(navNames, nameId) ?? nameId;
 
   const isFavorite = progress.favorites.includes(id);
   const stat = progress.nameStats[id];
@@ -44,7 +51,7 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
         >
           <ChevronLeft size={26} />
         </button>
-        <span className="font-extrabold text-muted">{t.detail.position(name.id)}</span>
+        <span className="font-extrabold text-muted">{t.detail.position(position(name.id), navNames.length)}</span>
         <button
           type="button"
           onClick={() => toggleFavorite(id)}
@@ -73,6 +80,22 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
         <p className="relative text-lg font-semibold text-hero-muted">{name.meaning[language]}</p>
       </section>
 
+      {/* Listes qui contiennent ce nom : prévient l'utilisateur que les listes diffèrent */}
+      <div className="space-y-1.5 px-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-muted">{t.detail.inLists}</span>
+          {name.lists.map(list => (
+            <span key={list} className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${LIST_PILL[list]}`}>
+              {t.listNames[list]}
+            </span>
+          ))}
+        </div>
+        {name.lists.length === 1 && <p className="text-xs font-semibold text-muted">{t.detail.onlyIn[name.lists[0]]}</p>}
+        {!inFollowedList && (
+          <p className="px-3 py-2 rounded-xl bg-accent-soft text-sm font-semibold text-accent-ink">{t.detail.notInList}</p>
+        )}
+      </div>
+
       {/* Nom précédent / suivant */}
       <div className="grid grid-cols-2 gap-3">
         <button
@@ -82,7 +105,7 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
           className="flex items-center gap-2 h-12 px-3 rounded-2xl bg-surface border border-line text-sm font-bold text-ink min-w-0"
         >
           <ChevronLeft size={18} className="shrink-0 text-muted" />
-          <span className="truncate">#{previous.id} {previous.transliteration}</span>
+          <span className="truncate">#{position(previous.id)} {previous.transliteration}</span>
         </button>
         <button
           type="button"
@@ -90,7 +113,7 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
           aria-label={t.detail.next}
           className="flex items-center justify-end gap-2 h-12 px-3 rounded-2xl bg-surface border border-line text-sm font-bold text-ink min-w-0"
         >
-          <span className="truncate">#{next.id} {next.transliteration}</span>
+          <span className="truncate">#{position(next.id)} {next.transliteration}</span>
           <ChevronRight size={18} className="shrink-0 text-muted" />
         </button>
       </div>
