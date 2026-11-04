@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { NameStat, TimedLevel, UserProgress } from '../types';
+import { ChallengeScore, NameStat, TimedLevel, UserProgress } from '../types';
 import { applyAnswer, computeEarnedBadges, dayKey, MASTERED_BOX } from '../lib/learning';
 
 interface ProgressContextType {
   progress: UserProgress;
   markAsMastered: (id: number) => void;
   unmarkAsMastered: (id: number) => void;
-  /** level : difficulté du « Contre la montre » (enregistrée seulement pour ce défi) */
-  saveChallengeScore: (score: number, total: number, timed?: boolean, level?: TimedLevel) => void;
+  /**
+   * level : difficulté du « Contre la montre » ; reverse : sens inverse (sens → arabe).
+   * Les deux ne sont enregistrés que pour ce défi.
+   */
+  saveChallengeScore: (score: number, total: number, timed?: boolean, level?: TimedLevel, reverse?: boolean) => void;
   resetProgress: () => void;
   /** Enregistre une réponse (QCM, Défi, Cartes) : maîtrise, erreurs, XP et jour d'étude */
   recordAnswer: (id: number, correct: boolean, xp?: number) => void;
@@ -144,15 +147,18 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const saveChallengeScore = (score: number, total: number, timed: boolean = false, level?: TimedLevel) => {
-    update(prev => ({
-      ...prev,
-      // timed est toujours écrit (true ou false) : il distingue aussi les scores corrigés des anciens
-      challengeScores: [
-        ...prev.challengeScores,
-        timed && level ? { date: Date.now(), score, total, timed, level } : { date: Date.now(), score, total, timed },
-      ],
-    }));
+  const saveChallengeScore = (
+    score: number,
+    total: number,
+    timed: boolean = false,
+    level?: TimedLevel,
+    reverse: boolean = false
+  ) => {
+    // timed est toujours écrit (true ou false) : il distingue aussi les scores corrigés des anciens
+    const entry: ChallengeScore = { date: Date.now(), score, total, timed };
+    if (timed && level) entry.level = level;
+    if (timed && reverse) entry.reverse = true;
+    update(prev => ({ ...prev, challengeScores: [...prev.challengeScores, entry] }));
   };
 
   const toggleFavorite = (id: number) => {

@@ -12,6 +12,8 @@ interface QuizResultsProps {
   timed: boolean;
   /** Difficulté du « Contre la montre », affichée dans le résumé */
   timedLevel?: TimedLevel;
+  /** Quiz en sens inverse (sens → arabe), affiché dans le résumé du « Contre la montre » */
+  reverse?: boolean;
   answers: AnswerRecord[];
   total: number;
   xpGained: number;
@@ -31,6 +33,7 @@ export default function QuizResults({
   label,
   timed,
   timedLevel = 'medium',
+  reverse = false,
   answers,
   total,
   xpGained,
@@ -78,7 +81,12 @@ export default function QuizResults({
         <div className="min-w-0">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">{heading}</h1>
           <p className="text-sm font-semibold text-muted">
-            {timed ? t.results.timedSummary(score, t.challenge.levels[timedLevel]) : t.results.summary(label, total)}
+            {timed
+              ? t.results.timedSummary(
+                  score,
+                  `${t.challenge.levels[timedLevel]}${reverse ? ` · ${t.qcm.modes.reverse.title}` : ''}`
+                )
+              : t.results.summary(label, total)}
           </p>
         </div>
       </div>

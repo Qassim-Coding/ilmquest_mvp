@@ -39,6 +39,11 @@ export interface ChallengeScore {
    * Absente dans les scores d'avant les niveaux : ils se jouaient à +2 s, donc en « difficile ».
    */
   level?: TimedLevel;
+  /**
+   * true si le « Contre la montre » était en sens inverse (sens → arabe).
+   * Absent : sens habituel (arabe → sens), y compris pour tous les scores plus anciens.
+   */
+  reverse?: boolean;
 }
 
 /**

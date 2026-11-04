@@ -17,6 +17,8 @@ import {
 import { TimedLevel } from '../types';
 
 type ChallengeType = 'classic' | 'timed';
+/** Sens du « Contre la montre » : arabe → sens (habituel) ou sens → arabe (inverse) */
+type Direction = 'classic' | 'reverse';
 
 interface Session {
   key: number;
@@ -25,11 +27,15 @@ interface Session {
   type: ChallengeType;
   /** Difficulté choisie pour « Contre la montre » */
   level: TimedLevel;
+  /** Sens du quiz : seul le « Contre la montre » peut être joué en sens inverse */
+  direction: Direction;
   ids: number[];
 }
 
-// La dernière difficulté choisie est gardée sur le téléphone
+// Les derniers choix du « Contre la montre » sont gardés sur le téléphone
 const LEVEL_KEY = '99names_timed_level';
+const DIRECTION_KEY = '99names_timed_direction';
+const DIRECTIONS: Direction[] = ['classic', 'reverse'];
 
 function loadLevel(): TimedLevel {
   try {
@@ -40,52 +46,89 @@ function loadLevel(): TimedLevel {
   }
 }
 
+function loadDirection(): Direction {
+  try {
+    return localStorage.getItem(DIRECTION_KEY) === 'reverse' ? 'reverse' : 'classic';
+  } catch {
+    return 'classic';
+  }
+}
+
+function remember(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Stockage indisponible : le choix vaut pour cette visite seulement
+  }
+}
+
 export default function Challenge() {
   const { progress, saveChallengeScore } = useProgress();
   const { t } = useLanguage();
   const [type, setType] = useState<ChallengeType>('classic');
   const [level, setLevel] = useState<TimedLevel>(loadLevel);
+  const [direction, setDirection] = useState<Direction>(loadDirection);
   const [questionCount, setQuestionCount] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
 
   const chooseLevel = (next: TimedLevel) => {
     setLevel(next);
-    try {
-      localStorage.setItem(LEVEL_KEY, next);
-    } catch {
-      // Stockage indisponible : le choix vaut pour cette visite seulement
-    }
+    remember(LEVEL_KEY, next);
   };
 
-  const startChallenge = (challengeType: ChallengeType, challengeLevel: TimedLevel) => {
+  const chooseDirection = (next: Direction) => {
+    setDirection(next);
+    remember(DIRECTION_KEY, next);
+  };
+
+  const startChallenge = (challengeType: ChallengeType, challengeLevel: TimedLevel, challengeDirection: Direction) => {
     const ids =
       challengeType === 'timed'
         ? shuffle(getPool('classic', progress))
         : pickQuestionIds('classic', questionCount, progress);
-    setSession({ key: Date.now(), kind: 'challenge', type: challengeType, level: challengeLevel, ids });
+    setSession({
+      key: Date.now(),
+      kind: 'challenge',
+      type: challengeType,
+      level: challengeLevel,
+      // Le défi classique reste toujours arabe → sens
+      direction: challengeType === 'timed' ? challengeDirection : 'classic',
+      ids,
+    });
   };
 
   if (session) {
     const isChallenge = session.kind === 'challenge';
     const isTimed = isChallenge && session.type === 'timed';
+    const isReverse = session.direction === 'reverse';
     // Nouvelle clé = nouvelle partie : le Fragment remet le quiz à zéro
     return (
       <Fragment key={session.key}>
         <QuizEngine
           kind={session.kind}
-          mode="classic"
+          mode={isReverse ? 'reverse' : 'classic'}
           timed={isTimed}
           timedLevel={session.level}
           questionIds={session.ids}
-          onComplete={isChallenge ? (score, total) => saveChallengeScore(score, total, isTimed, session.level) : undefined}
+          onComplete={
+            isChallenge ? (score, total) => saveChallengeScore(score, total, isTimed, session.level, isReverse) : undefined
+          }
           onStop={() => setSession(null)}
           onRestart={() =>
             isChallenge
-              ? startChallenge(session.type, session.level)
+              ? startChallenge(session.type, session.level, session.direction)
               : setSession({ ...session, key: Date.now(), ids: shuffle(session.ids) })
           }
+          // Les erreurs se révisent dans le même sens que la partie
           onReviewMistakes={(ids) =>
-            setSession({ key: Date.now(), kind: 'practice', type: 'classic', level: session.level, ids: shuffle(ids) })
+            setSession({
+              key: Date.now(),
+              kind: 'practice',
+              type: 'classic',
+              level: session.level,
+              direction: session.direction,
+              ids: shuffle(ids),
+            })
           }
         />
       </Fragment>
@@ -97,18 +140,33 @@ export default function Challenge() {
   const bestScore = classicScores.length > 0
     ? Math.max(...classicScores.map(s => Math.round((Math.min(s.score, s.total) / s.total) * 100)))
     : 0;
-  // Un record par difficulté : +6 s et +2 s ne se comparent pas
-  const record = timedRecord(progress.challengeScores, level);
+  // Un record par difficulté et par sens : +6 s et +2 s, ou arabe → sens et sens → arabe, ne se comparent pas
+  const isReverse = direction === 'reverse';
+  const record = timedRecord(progress.challengeScores, level, isReverse);
   const earnedCount = BADGES.filter(badge => progress.earnedBadges.includes(badge.id)).length;
 
   const stats = [
-    { label: t.challenge.bestScore, value: `${bestScore} %`, Icon: Trophy, iconClass: 'text-accent' },
-    { label: t.challenge.completed, value: String(progress.challengeScores.length), Icon: Target, iconClass: 'text-hero-muted' },
-    { label: t.challenge.record(t.challenge.levels[level]), value: String(record), Icon: Timer, iconClass: 'text-hero-muted' },
+    { label: t.challenge.bestScore, sub: null, value: `${bestScore} %`, Icon: Trophy, iconClass: 'text-accent' },
+    { label: t.challenge.completed, sub: null, value: String(progress.challengeScores.length), Icon: Target, iconClass: 'text-hero-muted' },
+    {
+      label: t.challenge.record(t.challenge.levels[level]),
+      sub: t.challenge.directions[direction].title,
+      value: String(record),
+      Icon: Timer,
+      iconClass: 'text-hero-muted',
+    },
   ];
 
   const segment = (active: boolean) =>
     `h-11 rounded-xl text-sm font-extrabold transition-colors ${active ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`;
+
+  // Bouton de choix (sens ou difficulté) : un titre et une ligne d'explication
+  const choice = (active: boolean) =>
+    `flex flex-col items-center justify-center gap-0.5 h-16 px-2 rounded-xl text-center transition-colors ${
+      active ? 'bg-primary text-on-primary' : 'bg-ground text-ink hover:bg-track'
+    }`;
+  // La couleur du sous-titre suit celle du fond (même transition), pour rester lisible pendant le changement
+  const choiceSub = (active: boolean) => `text-xs font-bold transition-colors ${active ? 'text-on-primary' : 'text-muted'}`;
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
@@ -122,11 +180,12 @@ export default function Challenge() {
           <rect x="5" y="5" width="14" height="14" rx="1.5" />
           <rect x="5" y="5" width="14" height="14" rx="1.5" transform="rotate(45 12 12)" />
         </svg>
-        {stats.map(({ label, value, Icon, iconClass }) => (
+        {stats.map(({ label, sub, value, Icon, iconClass }) => (
           <div key={label} className="relative flex flex-col items-center gap-1 text-center">
             <Icon size={22} className={iconClass} />
             <span className="text-xl font-extrabold text-on-hero">{value}</span>
             <span className="text-xs font-semibold text-hero-muted">{label}</span>
+            {sub && <span className="-mt-1 text-xs font-medium text-hero-muted">{sub}</span>}
           </div>
         ))}
       </section>
@@ -171,12 +230,36 @@ export default function Challenge() {
               </span>
               <div>
                 <h2 className="font-extrabold text-ink">{t.challenge.timedTitle}</h2>
-                <p className="text-sm font-medium text-muted">{t.challenge.timedDesc(TIMED_BONUS[level])}</p>
+                <p className="text-sm font-medium text-muted">{t.challenge.timedDesc(TIMED_BONUS[level], isReverse)}</p>
               </div>
             </div>
+
+            {/* Sens : arabe → sens, ou sens → arabe (on retrouve le nom à partir de la traduction) */}
+            <div className="space-y-2">
+              <h3 className="font-extrabold text-ink">{t.challenge.directionTitle}</h3>
+              <div role="radiogroup" aria-label={t.challenge.directionTitle} className="grid grid-cols-2 gap-2">
+                {DIRECTIONS.map(id => {
+                  const isActive = direction === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => chooseDirection(id)}
+                      className={choice(isActive)}
+                    >
+                      <span className="font-extrabold">{t.challenge.directions[id].title}</span>
+                      <span className={choiceSub(isActive)}>{t.challenge.directions[id].sub}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Facile +6 s, Moyen +4 s, Difficile +2 s par bonne réponse */}
             <div className="space-y-2">
               <h3 className="font-extrabold text-ink">{t.challenge.levelTitle}</h3>
-              {/* Facile +6 s, Moyen +4 s, Difficile +2 s par bonne réponse */}
               <div role="radiogroup" aria-label={t.challenge.levelTitle} className="grid grid-cols-3 gap-2">
                 {TIMED_LEVELS.map(id => {
                   const isActive = level === id;
@@ -187,14 +270,10 @@ export default function Challenge() {
                       role="radio"
                       aria-checked={isActive}
                       onClick={() => chooseLevel(id)}
-                      className={`flex flex-col items-center justify-center gap-0.5 h-16 rounded-xl transition-colors ${
-                        isActive ? 'bg-primary text-on-primary' : 'bg-ground text-ink hover:bg-track'
-                      }`}
+                      className={choice(isActive)}
                     >
                       <span className="font-extrabold">{t.challenge.levels[id]}</span>
-                      <span className={`text-xs font-bold ${isActive ? 'text-on-primary' : 'text-muted'}`}>
-                        {t.challenge.bonus(TIMED_BONUS[id])}
-                      </span>
+                      <span className={choiceSub(isActive)}>{t.challenge.bonus(TIMED_BONUS[id])}</span>
                     </button>
                   );
                 })}
@@ -228,7 +307,7 @@ export default function Challenge() {
 
       <button
         type="button"
-        onClick={() => startChallenge(type, level)}
+        onClick={() => startChallenge(type, level, direction)}
         className="w-full flex items-center justify-center gap-3 h-14 rounded-2xl bg-primary text-on-primary text-lg font-extrabold hover:bg-primary-hover transition-colors"
       >
         <Play fill="currentColor" size={20} />

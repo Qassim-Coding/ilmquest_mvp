@@ -126,6 +126,7 @@ export default function QuizEngine({
         label={label}
         timed={timed}
         timedLevel={timedLevel}
+        reverse={reverse}
         answers={answers}
         total={total}
         xpGained={xpGained}
@@ -144,7 +145,7 @@ export default function QuizEngine({
   const modeLabel =
     kind === 'challenge'
       ? timed
-        ? `${t.challenge.timed} · ${t.challenge.levels[timedLevel]}`
+        ? `${t.challenge.timed} · ${t.challenge.levels[timedLevel]}${reverse ? ` · ${t.qcm.modes.reverse.title}` : ''}`
         : t.challenge.title
       : t.qcm.modes[mode].label;
 

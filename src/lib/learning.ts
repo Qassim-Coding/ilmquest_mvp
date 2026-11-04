@@ -24,11 +24,14 @@ export const TIMED_LEVELS: TimedLevel[] = ['easy', 'medium', 'hard'];
 export const TIMED_BONUS: Record<TimedLevel, number> = { easy: 6, medium: 4, hard: 2 };
 
 /**
- * Meilleur nombre de noms trouvés en « Contre la montre » pour une difficulté.
+ * Meilleur nombre de noms trouvés en « Contre la montre » pour une difficulté et un sens.
  * Les scores d'avant les niveaux (sans `level`) se jouaient à +2 s : ils comptent en « difficile ».
+ * Les scores sans `reverse` sont dans le sens habituel (arabe → sens).
  */
-export function timedRecord(scores: ChallengeScore[], level: TimedLevel): number {
-  const matching = scores.filter(s => s.timed === true && (s.level ?? 'hard') === level);
+export function timedRecord(scores: ChallengeScore[], level: TimedLevel, reverse: boolean = false): number {
+  const matching = scores.filter(
+    s => s.timed === true && (s.level ?? 'hard') === level && (s.reverse === true) === reverse
+  );
   return matching.length > 0 ? Math.max(...matching.map(s => s.score)) : 0;
 }
 

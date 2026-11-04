@@ -5,7 +5,8 @@ import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { countByLevel, getLevel } from '../lib/learning';
 import { LEVEL_PILL } from '../lib/levelStyles';
-import { stripHarakat, useArabic } from '../lib/arabic';
+import { useArabic } from '../lib/arabic';
+import { matchesSearch } from '../lib/search';
 
 type ListFilter = 'all' | 'mastered' | 'learning' | 'favorites';
 
@@ -21,16 +22,11 @@ export default function NamesList({ onOpenName }: NamesListProps) {
   const arabic = useArabic();
 
   const { mastered, learning, toDiscover } = countByLevel(progress);
-  const term = searchTerm.toLowerCase();
-  // La recherche en arabe ignore les voyelles : « الرَّحِيمُ » trouve « الرحيم »
-  const arabicTerm = stripHarakat(searchTerm.trim());
 
+  // Recherche tolérante (voir src/lib/search.ts) : sans accents ni signes, avec ou sans article,
+  // et en arabe avec ou sans voyelles. « Rahim » trouve Ar-Rahîm.
   const filteredNames = namesOfAllah.filter(name => {
-    const matchesSearch =
-      name.transliteration.toLowerCase().includes(term) ||
-      name.meaning[language].toLowerCase().includes(term) ||
-      (arabicTerm !== '' && name.arabic.includes(arabicTerm));
-    if (!matchesSearch) return false;
+    if (!matchesSearch(name, searchTerm, language)) return false;
     const level = getLevel(progress, name.id);
     if (filter === 'mastered') return level === 'mastered';
     if (filter === 'learning') return level === 'learning' || level === 'familiar';

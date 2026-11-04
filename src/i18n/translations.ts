@@ -126,8 +126,15 @@ export const translations = {
       typeLabel: "Type de défi",
       classic: "Classique", timed: "Contre la montre",
       timedTitle: "60 secondes chrono",
-      timedDesc: (seconds: number) =>
-        `Trouvez le sens d'un maximum de noms tirés au hasard. Chaque bonne réponse ajoute ${seconds} secondes.`,
+      timedDesc: (seconds: number, reverse: boolean) =>
+        reverse
+          ? `Retrouvez le nom (arabe et translittération) d'un maximum de significations tirées au hasard. Chaque bonne réponse ajoute ${seconds} secondes.`
+          : `Trouvez le sens d'un maximum de noms tirés au hasard. Chaque bonne réponse ajoute ${seconds} secondes.`,
+      directionTitle: "Sens du quiz",
+      directions: {
+        classic: { title: "Arabe → sens", sub: "Trouvez la signification" },
+        reverse: { title: "Sens → arabe", sub: "Trouvez le nom" }
+      },
       levelTitle: "Difficulté",
       levels: { easy: "Facile", medium: "Moyen", hard: "Difficile" },
       bonus: (seconds: number) => `+${seconds} s`,
@@ -298,8 +305,15 @@ export const translations = {
       typeLabel: "Challenge type",
       classic: "Classic", timed: "Against the clock",
       timedTitle: "60-second sprint",
-      timedDesc: (seconds: number) =>
-        `Find the meaning of as many random names as you can. Each correct answer adds ${seconds} seconds.`,
+      timedDesc: (seconds: number, reverse: boolean) =>
+        reverse
+          ? `Find the name (Arabic and transliteration) for as many random meanings as you can. Each correct answer adds ${seconds} seconds.`
+          : `Find the meaning of as many random names as you can. Each correct answer adds ${seconds} seconds.`,
+      directionTitle: "Quiz direction",
+      directions: {
+        classic: { title: "Arabic → meaning", sub: "Find the meaning" },
+        reverse: { title: "Meaning → Arabic", sub: "Find the name" }
+      },
       levelTitle: "Difficulty",
       levels: { easy: "Easy", medium: "Medium", hard: "Hard" },
       bonus: (seconds: number) => `+${seconds} s`,
