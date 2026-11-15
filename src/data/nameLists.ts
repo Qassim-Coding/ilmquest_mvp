@@ -1,11 +1,19 @@
 import { namesOfAllah } from './names';
 import { DivineName, NameListChoice, NameListId } from '../types';
 
-/** Les deux listes de noms proposées dans l'app : Tirmidhî (référence) et Ajib.fr (ancienne liste, source à vérifier) */
+/** Les deux listes de noms de l'app : Tirmidhî (référence) et Ajib.fr (ancienne liste, source à vérifier) */
 export const NAME_LISTS: NameListId[] = ['tirmidhi', 'ilmquest'];
 
+/**
+ * Liste Ajib.fr masquée tant que sa source n'est pas vérifiée (décision de Qassim, 15.11.2026).
+ * Masquée = l'utilisateur ne voit que la liste de Tirmidhî : pas de choix de liste dans Paramètres,
+ * pas de page « Pourquoi deux listes ? », pas de pastilles de liste sur les fiches.
+ * Les données de la liste restent dans names.ts : passer à true suffit pour la réafficher.
+ */
+export const SHOW_AJIB_LIST = false;
+
 /** Choix possibles dans Paramètres, dans l'ordre d'affichage : une liste, ou les deux réunies */
-export const NAME_LIST_CHOICES: NameListChoice[] = ['tirmidhi', 'ilmquest', 'all'];
+export const NAME_LIST_CHOICES: NameListChoice[] = SHOW_AJIB_LIST ? ['tirmidhi', 'ilmquest', 'all'] : ['tirmidhi'];
 
 /**
  * Liste suivie par défaut : la liste de Tirmidhî, liste de référence de l'app (décision de Qassim, 04.11.2026).
@@ -53,7 +61,10 @@ export function ownNamesCount(list: NameListId): number {
   return namesOfAllah.filter(name => name.lists.length === 1 && name.lists[0] === list).length;
 }
 
-/** Vrai si la valeur enregistrée sur le téléphone est un choix de liste valable */
+/**
+ * Vrai si la valeur enregistrée sur le téléphone est un choix de liste proposé.
+ * Un choix qui n'est plus proposé (ex. liste Ajib.fr masquée) ramène à la liste par défaut.
+ */
 export function isNameListChoice(value: unknown): value is NameListChoice {
-  return value === 'ilmquest' || value === 'tirmidhi' || value === 'all';
+  return NAME_LIST_CHOICES.includes(value as NameListChoice);
 }

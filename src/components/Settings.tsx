@@ -58,7 +58,9 @@ export default function Settings({ onBack }: SettingsProps) {
         <h1 className="text-3xl font-extrabold tracking-tight text-ink">{t.settings.title}</h1>
       </div>
 
-      {/* Liste des Noms : les savants n'ont pas tous retenu la même liste de 99 noms */}
+      {/* Liste des Noms : les savants n'ont pas tous retenu la même liste de 99 noms.
+          Affichée seulement s'il y a plusieurs listes au choix (voir SHOW_AJIB_LIST dans src/data/nameLists.ts). */}
+      {NAME_LIST_CHOICES.length > 1 && (
       <section className="space-y-2.5">
         <div className="px-1">
           <h2 className="font-extrabold text-ink">{t.settings.nameList}</h2>
@@ -103,6 +105,7 @@ export default function Settings({ onBack }: SettingsProps) {
           <ChevronRight size={18} />
         </button>
       </section>
+      )}
 
       {/* Thème */}
       <section className="space-y-2.5">

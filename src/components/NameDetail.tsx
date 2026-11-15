@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Heart, Layers, RotateCcw } from 'lucide-react';
-import { getListNames } from '../data/nameLists';
+import { getListNames, SHOW_AJIB_LIST } from '../data/nameLists';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { daysUntilReview, getLevel, getNameById, LEVEL_ORDER, positionInList } from '../lib/learning';
@@ -80,8 +80,10 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
         <p className="relative text-lg font-semibold text-hero-muted">{name.meaning[language]}</p>
       </section>
 
-      {/* Listes qui contiennent ce nom : prévient l'utilisateur que les listes diffèrent */}
+      {/* Listes qui contiennent ce nom : prévient l'utilisateur que les listes diffèrent.
+          Pastilles affichées seulement quand la liste Ajib.fr est proposée (voir SHOW_AJIB_LIST). */}
       <div className="space-y-1.5 px-1">
+        {SHOW_AJIB_LIST && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-muted">{t.detail.inLists}</span>
           {name.lists.map(list => (
@@ -90,7 +92,8 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
             </span>
           ))}
         </div>
-        {name.lists.length === 1 && <p className="text-xs font-semibold text-muted">{t.detail.onlyIn[name.lists[0]]}</p>}
+        )}
+        {SHOW_AJIB_LIST && name.lists.length === 1 && <p className="text-xs font-semibold text-muted">{t.detail.onlyIn[name.lists[0]]}</p>}
         {!inFollowedList && (
           <p className="px-3 py-2 rounded-xl bg-accent-soft text-sm font-semibold text-accent-ink">{t.detail.notInList}</p>
         )}
