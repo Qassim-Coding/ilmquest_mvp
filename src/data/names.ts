@@ -6,22 +6,23 @@ import { DivineName } from '../types';
  *   « tirmidhi » = liste rapportée par at-Tirmidhî (n° 3507), liste de référence de l'app, dans l'ordre de nameLists.ts ;
  *   « ilmquest » = ancienne liste de l'app (ids 1 à 99, dans cet ordre), reprise du site Ajib.fr
  *   (« Les 99 noms d'Allah Azawajal et leurs significations ») ; affichée « Liste Ajib.fr », source à vérifier.
- * - Les textes des ids 1 à 99 (translittération, sens) viennent d'Ajib.fr, y compris pour les 69 noms
- *   que la liste de Tirmidhî partage avec elle : ils sont à vérifier eux aussi.
- * - Les champs arabic, transliteration et meaning des ids 1 à 99 sont ceux d'origine, non modifiés.
+ * - Liste de Tirmidhî (99 noms) : relue et validée le 15.11.2026 (forme vocalisée, translittération, sens français).
+ *   Modifiés ce jour-là : sens français des ids 4, 11, 22, 32, 46, 63, 74, 98, 115 ; translittération des ids 66 et 83.
+ *   Les sens anglais modifiés suivent les nouveaux sens français ; les autres sens anglais n'ont pas encore été relus.
+ * - Les 30 noms propres à la liste Ajib.fr gardent les textes d'origine du site, pas encore relus.
  */
 export const namesOfAllah: DivineName[] = [
   { id: 1, arabic: "الله", transliteration: "Allah", meaning: { fr: "Dieu", en: "God" }, lists: ["ilmquest"] },
   { id: 2, arabic: "الرحمن", transliteration: "Ar-Rahmân", meaning: { fr: "Le Tout Miséricordieux", en: "The Entirely Merciful" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 3, arabic: "الرحيم", transliteration: "Ar-Rahîm", meaning: { fr: "Le Très Miséricordieux", en: "The Especially Merciful" }, lists: ["ilmquest", "tirmidhi"] },
-  { id: 4, arabic: "العفو", transliteration: "Al-‘Afuww", meaning: { fr: "Le Grand Pardonneur", en: "The Pardoner" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 4, arabic: "العفو", transliteration: "Al-‘Afuww", meaning: { fr: "Celui qui efface les péchés", en: "The One who erases sins" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 5, arabic: "الغفور", transliteration: "Al-Ghafûr", meaning: { fr: "Le Pardonneur", en: "The Forgiving" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 6, arabic: "الغفار", transliteration: "Al-Ghaffâr", meaning: { fr: "Le Grand Pardonneur", en: "The Repeatedly Forgiving" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 7, arabic: "الرؤوف", transliteration: "Ar-Ra’ûf", meaning: { fr: "Le Clément", en: "The Kind" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 8, arabic: "الحليم", transliteration: "Al-Halîm", meaning: { fr: "L’Indulgent", en: "The Forbearing" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 9, arabic: "التواب", transliteration: "At-Tawwâb", meaning: { fr: "L’Accueillant au repentir", en: "The Accepting of Repentance" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 10, arabic: "الستير", transliteration: "As-Sitîr", meaning: { fr: "Celui qui couvre", en: "The Concealer of Sins" }, lists: ["ilmquest"] },
-  { id: 11, arabic: "الغني", transliteration: "Al-Ghanîy", meaning: { fr: "Le Riche", en: "The Rich" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 11, arabic: "الغني", transliteration: "Al-Ghanîy", meaning: { fr: "Celui qui se suffit à Lui-même", en: "The Self-Sufficient" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 12, arabic: "الكريم", transliteration: "Al-Karîm", meaning: { fr: "Le Généreux", en: "The Generous" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 13, arabic: "الأكرم", transliteration: "Al-Akram", meaning: { fr: "Le Généreux par excellence", en: "The Most Generous" }, lists: ["ilmquest"] },
   { id: 14, arabic: "الوهاب", transliteration: "Al-Wahhâb", meaning: { fr: "Celui qui donne sans compter", en: "The Bestower" }, lists: ["ilmquest", "tirmidhi"] },
@@ -32,7 +33,7 @@ export const namesOfAllah: DivineName[] = [
   { id: 19, arabic: "المحسن", transliteration: "Al-Muhsin", meaning: { fr: "Le Bienfaiteur", en: "The Benefactor" }, lists: ["ilmquest"] },
   { id: 20, arabic: "الرازق", transliteration: "Ar-Râziq", meaning: { fr: "Le Pourvoyeur", en: "The Provider" }, lists: ["ilmquest"] },
   { id: 21, arabic: "الرزاق", transliteration: "Ar-Razzâq", meaning: { fr: "Le Grand Pourvoyeur", en: "The Supreme Provider" }, lists: ["ilmquest", "tirmidhi"] },
-  { id: 22, arabic: "اللطيف", transliteration: "Al-Latîf", meaning: { fr: "Le Subtil", en: "The Subtle" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 22, arabic: "اللطيف", transliteration: "Al-Latîf", meaning: { fr: "Le Bienveillant", en: "The Benevolent" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 23, arabic: "الخبير", transliteration: "Al-Khabîr", meaning: { fr: "Le Parfaitement Connaisseur", en: "The Acquainted" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 24, arabic: "الفتاح", transliteration: "Al-Fattâh", meaning: { fr: "L’Octroyeur", en: "The Opener" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 25, arabic: "العليم", transliteration: "Al-‘Alîm", meaning: { fr: "Celui qui sait tout", en: "The All-Knowing" }, lists: ["ilmquest", "tirmidhi"] },
@@ -42,7 +43,7 @@ export const namesOfAllah: DivineName[] = [
   { id: 29, arabic: "الشاكر", transliteration: "Ach-Châkir", meaning: { fr: "Le Reconnaissant", en: "The Appreciative" }, lists: ["ilmquest"] },
   { id: 30, arabic: "الشكور", transliteration: "Ach-Chakûr", meaning: { fr: "Le Très Reconnaissant", en: "The Most Appreciative" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 31, arabic: "الجميل", transliteration: "Al-Jamîl", meaning: { fr: "Le Beau", en: "The Beautiful" }, lists: ["ilmquest"] },
-  { id: 32, arabic: "المجيد", transliteration: "Al-Majîd", meaning: { fr: "Le Majestueux", en: "The Glorious" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 32, arabic: "المجيد", transliteration: "Al-Majîd", meaning: { fr: "Le Glorieux", en: "The Glorious" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 33, arabic: "الولي", transliteration: "Al-Walîy", meaning: { fr: "Le Maître ou l’Allié", en: "The Protecting Friend" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 34, arabic: "الحميد", transliteration: "Al-Hamîd", meaning: { fr: "Le Digne de louanges", en: "The Praiseworthy" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 35, arabic: "المولى", transliteration: "Al-Mawlâ", meaning: { fr: "Le Maître", en: "The Patron" }, lists: ["ilmquest"] },
@@ -56,7 +57,7 @@ export const namesOfAllah: DivineName[] = [
   { id: 43, arabic: "المجيب", transliteration: "Al-Mujîb", meaning: { fr: "Celui qui exauce les invocations", en: "The Responsive" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 44, arabic: "المقيت", transliteration: "Al-Muqît", meaning: { fr: "Le Nourrisseur par excellence", en: "The Nourisher" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 45, arabic: "الحسيب", transliteration: "Al-Hassîb", meaning: { fr: "Celui qui tient les comptes", en: "The Accountant" }, lists: ["ilmquest", "tirmidhi"] },
-  { id: 46, arabic: "المؤمن", transliteration: "Al-Mu’min", meaning: { fr: "Le Rassurant", en: "The Guarantor" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 46, arabic: "المؤمن", transliteration: "Al-Mu’min", meaning: { fr: "Le Garant de la sécurité", en: "The Guarantor of security" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 47, arabic: "المنان", transliteration: "Al-Mannân", meaning: { fr: "L’Excellent Donateur", en: "The Bestower of Favors" }, lists: ["ilmquest"] },
   { id: 48, arabic: "الطيب", transliteration: "At-Tayyib", meaning: { fr: "Le Bon", en: "The Good" }, lists: ["ilmquest"] },
   { id: 49, arabic: "الشافي", transliteration: "Ach-Châfiy", meaning: { fr: "Celui qui guérit", en: "The Healer" }, lists: ["ilmquest"] },
@@ -73,10 +74,10 @@ export const namesOfAllah: DivineName[] = [
   { id: 60, arabic: "المهيمن", transliteration: "Al-Muhaymin", meaning: { fr: "Le Prévenant", en: "The Guardian" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 61, arabic: "العزيز", transliteration: "Al-‘Azîz", meaning: { fr: "Le Tout-Puissant", en: "The Almighty" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 62, arabic: "الجبار", transliteration: "Al-Jabbâr", meaning: { fr: "Le Contraignant", en: "The Compeller" }, lists: ["ilmquest", "tirmidhi"] },
-  { id: 63, arabic: "المتكبر", transliteration: "Al-Mutakabbir", meaning: { fr: "L’Orgueilleux", en: "The Supreme" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 63, arabic: "المتكبر", transliteration: "Al-Mutakabbir", meaning: { fr: "Celui qui possède la grandeur absolue", en: "The One who possesses absolute greatness" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 64, arabic: "الكبير", transliteration: "Al-Kabîr", meaning: { fr: "Le Grand", en: "The Great" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 65, arabic: "الحيي", transliteration: "Al-Hayyiy", meaning: { fr: "Le Pudique", en: "The Modest" }, lists: ["ilmquest"] },
-  { id: 66, arabic: "الحي", transliteration: "Hayy", meaning: { fr: "Le Vivant", en: "The Living" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 66, arabic: "الحي", transliteration: "Al-Hayy", meaning: { fr: "Le Vivant", en: "The Living" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 67, arabic: "القيوم", transliteration: "Al-Qayyûm", meaning: { fr: "Celui qui subsiste par Lui-même", en: "The Sustainer" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 68, arabic: "الوارث", transliteration: "Al-Wârith", meaning: { fr: "Celui vers qui tout retourne", en: "The Inheritor" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 69, arabic: "الديان", transliteration: "Ad-Dayyân", meaning: { fr: "Le Souverain Juge", en: "The Supreme Judge" }, lists: ["ilmquest"] },
@@ -84,7 +85,7 @@ export const namesOfAllah: DivineName[] = [
   { id: 71, arabic: "المالك", transliteration: "Al-Mâlik", meaning: { fr: "Le Maître Suprême", en: "The Master" }, lists: ["ilmquest"] },
   { id: 72, arabic: "المليك", transliteration: "Al-Malîk", meaning: { fr: "Le Souverain Omnipotent", en: "The Omnipotent Sovereign" }, lists: ["ilmquest"] },
   { id: 73, arabic: "السبوح", transliteration: "As-Subbûh", meaning: { fr: "Le Digne de glorification", en: "The Glorified" }, lists: ["ilmquest"] },
-  { id: 74, arabic: "القدوس", transliteration: "Al-Quddûs", meaning: { fr: "Le Sanctifié", en: "The Holy" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 74, arabic: "القدوس", transliteration: "Al-Quddûs", meaning: { fr: "L’Immaculé – Celui qui est exempt de toute imperfection", en: "The Immaculate – The One free from all imperfection" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 75, arabic: "السلام", transliteration: "As-Salâm", meaning: { fr: "L’Exempt de tout défaut", en: "The Flawless" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 76, arabic: "الحق", transliteration: "Al-Haqq", meaning: { fr: "Le Vrai", en: "The Truth" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 77, arabic: "المبين", transliteration: "Al-Mubîn", meaning: { fr: "L’Évident", en: "The Evident" }, lists: ["ilmquest"] },
@@ -93,7 +94,7 @@ export const namesOfAllah: DivineName[] = [
   { id: 80, arabic: "القادر", transliteration: "Al-Qâdir", meaning: { fr: "Le Capable de toute chose", en: "The Capable" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 81, arabic: "القدير", transliteration: "Al-Qadîr", meaning: { fr: "Celui qui est Capable de tout", en: "The All-Powerful" }, lists: ["ilmquest"] },
   { id: 82, arabic: "المقتدر", transliteration: "Al-Muqtadir", meaning: { fr: "Celui qui fixe la mesure de toute chose", en: "The Determiner" }, lists: ["ilmquest", "tirmidhi"] },
-  { id: 83, arabic: "العلي", transliteration: "Al-‘Aliyy – Al-A‘lâ", meaning: { fr: "Le Très Haut", en: "The Most High" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 83, arabic: "العلي", transliteration: "Al-‘Aliyy", meaning: { fr: "Le Très Haut", en: "The Most High" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 84, arabic: "المتعال", transliteration: "Al-Muta‘âl", meaning: { fr: "Le Transcendant", en: "The Exalted" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 85, arabic: "المقدم", transliteration: "Al-Muqaddim", meaning: { fr: "Celui qui fait avancer", en: "The Advancer" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 86, arabic: "المؤخر", transliteration: "Al-Mu‘akh-khir", meaning: { fr: "Celui qui retarde", en: "The Delayer" }, lists: ["ilmquest", "tirmidhi"] },
@@ -108,7 +109,7 @@ export const namesOfAllah: DivineName[] = [
   { id: 95, arabic: "السيد", transliteration: "As-Sayyid", meaning: { fr: "Le Maître suprême", en: "The Master" }, lists: ["ilmquest"] },
   { id: 96, arabic: "الصمد", transliteration: "As-Samad", meaning: { fr: "Le Seul à être imploré pour nos besoins", en: "The Eternal Refuge" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 97, arabic: "الواحد", transliteration: "Al-Wâhid", meaning: { fr: "L’Unique", en: "The One" }, lists: ["ilmquest", "tirmidhi"] },
-  { id: 98, arabic: "الأحد", transliteration: "Al-Ahad", meaning: { fr: "L’Unique", en: "The Unique" }, lists: ["ilmquest", "tirmidhi"] },
+  { id: 98, arabic: "الأحد", transliteration: "Al-Ahad", meaning: { fr: "L’Unique sans équivalent", en: "The Unique without equal" }, lists: ["ilmquest", "tirmidhi"] },
   { id: 99, arabic: "الإله", transliteration: "Al-Ilâh", meaning: { fr: "Celui qui est adoré [La Divinité]", en: "The Deity" }, lists: ["ilmquest"] },
 
   // Noms de la liste de Tirmidhî absents de la liste d’origine (ajoutés le 04.11.2026, ids 100 à 129).
@@ -128,7 +129,7 @@ export const namesOfAllah: DivineName[] = [
   { id: 112, arabic: "الواجد", transliteration: "Al-Wâjid", meaning: { fr: "Celui qui trouve", en: "The Finder" }, lists: ["tirmidhi"] },
   { id: 113, arabic: "الماجد", transliteration: "Al-Mâjid", meaning: { fr: "L’Illustre", en: "The Illustrious" }, lists: ["tirmidhi"] },
   { id: 114, arabic: "الوالي", transliteration: "Al-Wâlî", meaning: { fr: "Le Gouverneur", en: "The Governor" }, lists: ["tirmidhi"] },
-  { id: 115, arabic: "المنتقم", transliteration: "Al-Muntaqim", meaning: { fr: "Le Vengeur", en: "The Avenger" }, lists: ["tirmidhi"] },
+  { id: 115, arabic: "المنتقم", transliteration: "Al-Muntaqim", meaning: { fr: "Le Justicier", en: "The Just Requiter" }, lists: ["tirmidhi"] },
   { id: 116, arabic: "مالك الملك", transliteration: "Mâlik al-Mulk", meaning: { fr: "Le Possesseur de la royauté", en: "The Owner of All Sovereignty" }, lists: ["tirmidhi"] },
   { id: 117, arabic: "ذو الجلال والإكرام", transliteration: "Dhûl-Jalâli wal-Ikrâm", meaning: { fr: "Le Possesseur de la majesté et de l’honneur", en: "The Lord of Majesty and Generosity" }, lists: ["tirmidhi"] },
   { id: 118, arabic: "المقسط", transliteration: "Al-Muqsit", meaning: { fr: "L’Équitable", en: "The Equitable" }, lists: ["tirmidhi"] },
