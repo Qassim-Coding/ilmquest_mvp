@@ -2,11 +2,12 @@ import React from 'react';
 import { Check, RotateCcw } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
-import { BADGES, countByLevel, getNameById, objectivesFor } from '../lib/learning';
+import { BADGES, countByLevel, getNameById, objectivesFor, positionInList } from '../lib/learning';
 import { useActiveNames } from '../lib/activeNames';
 import { useArabic } from '../lib/arabic';
 import { AnswerRecord, TimedLevel } from '../types';
 import BadgeIcon, { badgeLabel } from './BadgeIcon';
+import SupportCard from './SupportCard';
 
 interface QuizResultsProps {
   label: string;
@@ -176,7 +177,7 @@ export default function QuizResults({
             return (
               <div key={id} className="flex items-center gap-3 py-1.5 pl-2.5 pr-4 rounded-2xl bg-surface border border-line">
                 <span className="flex items-center justify-center w-9 h-9 shrink-0 rounded-xl bg-danger-soft text-danger-ink text-xs font-extrabold">
-                  #{name.id}
+                  #{positionInList(names, id) ?? name.id}
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block font-extrabold text-ink">{name.transliteration}</span>
@@ -220,6 +221,9 @@ export default function QuizResults({
           {t.results.back}
         </button>
       </div>
+
+      {/* Soutenir l'app : rappel discret, sous les boutons */}
+      <SupportCard variant="results" />
     </div>
   );
 }

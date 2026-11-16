@@ -195,6 +195,14 @@ export const translations = {
       preview: "Aperçu",
       back: "Retour"
     },
+    support: {
+      title: "Soutenir IlmQuest",
+      text: "IlmQuest est gratuite et sans publicité. Si elle vous aide à apprendre les Noms d'Allah, vous pouvez soutenir son développement.",
+      resultsText: "IlmQuest vous est utile ? Vous pouvez soutenir son développement.",
+      button: "Soutenir l'app",
+      linkLabel: "Soutenir l'app sur Buy Me a Coffee (s'ouvre dans un nouvel onglet)",
+      dismiss: "Masquer"
+    },
     listNames: { ilmquest: "Liste Ajib.fr", tirmidhi: "Liste de Tirmidhî", all: "Les deux listes" },
     about: {
       title: "Pourquoi deux listes ?",
@@ -408,6 +416,14 @@ export const translations = {
       aboutLists: "Why two lists?",
       preview: "Preview",
       back: "Back"
+    },
+    support: {
+      title: "Support IlmQuest",
+      text: "IlmQuest is free and ad-free. If it helps you learn the Names of Allah, you can support its development.",
+      resultsText: "Finding IlmQuest useful? You can support its development.",
+      button: "Support the app",
+      linkLabel: "Support the app on Buy Me a Coffee (opens in a new tab)",
+      dismiss: "Hide"
     },
     listNames: { ilmquest: "Ajib.fr list", tirmidhi: "Tirmidhi list", all: "Both lists" },
     about: {

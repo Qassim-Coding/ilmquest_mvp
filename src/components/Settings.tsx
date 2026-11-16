@@ -6,6 +6,7 @@ import { getNameById } from '../lib/learning';
 import { useArabic } from '../lib/arabic';
 import { getListNames, NAME_LIST_CHOICES } from '../data/nameLists';
 import AboutLists from './AboutLists';
+import SupportCard from './SupportCard';
 
 interface SettingsProps {
   onBack: () => void;
@@ -204,6 +205,9 @@ export default function Settings({ onBack }: SettingsProps) {
           <span className="text-sm font-medium text-muted">{sample.meaning[language]}</span>
         </div>
       )}
+
+      {/* Soutenir l'app (lien Buy Me a Coffee, voir src/lib/support.ts) */}
+      <SupportCard variant="settings" />
     </div>
   );
 }

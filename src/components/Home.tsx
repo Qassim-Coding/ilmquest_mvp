@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { List, Layers, BookOpen, Target, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
 import { countByLevel, getDueIds, getNameOfTheDay, positionInList } from '../lib/learning';
 import { useArabic } from '../lib/arabic';
 import { useActiveNames } from '../lib/activeNames';
+import { canShowHomeSupport, dismissHomeSupport } from '../lib/support';
 import { ReviewMode, Tab } from '../types';
+import SupportCard from './SupportCard';
 
 interface HomeProps {
   onNavigate: (tab: Tab) => void;
@@ -24,6 +26,12 @@ export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProp
   const { mastered, learning, toDiscover, total } = countByLevel(progress, names);
   const percentage = Math.round((mastered / total) * 100);
   const dueCount = getDueIds(progress, names).length;
+  // Carte « Soutenir l'app » : après une première pratique, et cachée 30 jours quand on la ferme
+  const [showSupport, setShowSupport] = useState(() => canShowHomeSupport(progress.xp));
+  const closeSupport = () => {
+    dismissHomeSupport();
+    setShowSupport(false);
+  };
 
   const tiles: { tab: Tab; title: string; subtitle: string; Icon: typeof List; colors: string }[] = [
     { tab: 'list', title: t.nav.list, subtitle: t.home.tileList, Icon: List, colors: 'bg-soft text-soft-ink' },
@@ -146,6 +154,8 @@ export default function Home({ onNavigate, onOpenName, onStartReview }: HomeProp
           ))}
         </div>
       </div>
+
+      {showSupport && <SupportCard variant="home" onDismiss={closeSupport} />}
     </div>
   );
 }
