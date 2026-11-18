@@ -15,6 +15,7 @@ import {
   timedRecord,
 } from '../lib/learning';
 import { useActiveNames } from '../lib/activeNames';
+import { useBackHandler } from '../lib/backButton';
 import { TimedLevel } from '../types';
 
 type ChallengeType = 'classic' | 'timed';
@@ -73,6 +74,9 @@ export default function Challenge() {
   const [direction, setDirection] = useState<Direction>(loadDirection);
   const [questionCount, setQuestionCount] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
+
+  // Bouton retour d'Android pendant une partie ou sur ses résultats : comme la croix, retour au choix du défi
+  useBackHandler(session !== null, () => setSession(null));
 
   const chooseLevel = (next: TimedLevel) => {
     setLevel(next);

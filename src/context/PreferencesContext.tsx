@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { NameListChoice } from '../types';
 import { DEFAULT_NAME_LIST, isNameListChoice } from '../data/nameLists';
+import { applySystemBarsStyle } from '../lib/systemBars';
 
 type TextSize = 'sm' | 'md' | 'lg';
 
@@ -45,6 +46,8 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     } else {
       document.documentElement.classList.remove('dark');
     }
+    // App Android : l'heure et les icônes du téléphone suivent le thème de l'app (voir src/lib/systemBars.ts)
+    applySystemBarsStyle(isDarkMode);
   }, [isDarkMode]);
 
   useEffect(() => {

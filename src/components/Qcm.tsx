@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useProgress } from '../context/ProgressContext';
 import { getDueIds, getPool, pickQuestionIds, QUESTION_COUNTS, shuffle } from '../lib/learning';
 import { useActiveNames } from '../lib/activeNames';
+import { useBackHandler } from '../lib/backButton';
 import { QcmPreset, ReviewMode } from '../types';
 
 interface QcmProps {
@@ -42,6 +43,9 @@ export default function Qcm({ preset = null }: QcmProps) {
       ? { key: Date.now(), mode: preset.mode, ids: preset.fixedIds, fixed: true }
       : null
   );
+
+  // Bouton retour d'Android pendant un QCM ou sur ses résultats : comme la croix, retour au choix du mode
+  useBackHandler(session !== null, () => setSession(null));
 
   const dueCount = getDueIds(progress, names).length;
   const poolSize = getPool(mode, progress, names).length;

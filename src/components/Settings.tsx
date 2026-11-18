@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { usePreferences } from '../context/PreferencesContext';
 import { getNameById } from '../lib/learning';
 import { useArabic } from '../lib/arabic';
+import { useBackHandler } from '../lib/backButton';
 import { getListNames, NAME_LIST_CHOICES } from '../data/nameLists';
 import AboutLists from './AboutLists';
 import SupportCard from './SupportCard';
@@ -25,6 +26,9 @@ export default function Settings({ onBack }: SettingsProps) {
   const sample = getNameById(3);
   // Page « Pourquoi deux listes ? », ouverte depuis la section Liste des Noms
   const [showAbout, setShowAbout] = useState(false);
+
+  // Bouton retour d'Android sur la page « Pourquoi deux listes ? » : retour aux Paramètres
+  useBackHandler(showAbout, () => setShowAbout(false));
 
   const openAbout = () => {
     setShowAbout(true);

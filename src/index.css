@@ -127,9 +127,17 @@
   --color-stone-950: #0A1712;
 }
 
-/* Marge du bas qui tient compte de la barre d'accueil de l'iPhone */
+/* Marges qui tiennent compte des barres du téléphone : l'heure et la batterie en haut,
+   les boutons Android ou la barre d'accueil de l'iPhone en bas.
+   - env(safe-area-inset-…) : valeur donnée par le navigateur ou la WebView Android récente.
+   - var(--safe-area-inset-…) : valeur donnée par Capacitor dans l'app Android, pour les WebView plus anciennes.
+   On prend la plus grande des deux ; sur le site web, la seconde n'existe pas et vaut 0. */
+@utility pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+}
+
 @utility pb-safe {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
 }
 
 /* ------------------------------------------------------------------

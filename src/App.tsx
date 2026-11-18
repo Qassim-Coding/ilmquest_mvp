@@ -11,6 +11,8 @@ import Challenge from './components/Challenge';
 import NamesList from './components/NamesList';
 import NameDetail from './components/NameDetail';
 import Settings from './components/Settings';
+import ExitDialog from './components/ExitDialog';
+import { exitApp, useAndroidBackButton } from './lib/backButton';
 import { QcmPreset, ReviewMode, Tab } from './types';
 
 function MainApp() {
@@ -21,6 +23,8 @@ function MainApp() {
   const [qcmPreset, setQcmPreset] = useState<QcmPreset | null>(null);
   // Carte à afficher en premier dans l'onglet Cartes (depuis « Voir en carte »)
   const [cardsStartId, setCardsStartId] = useState<number | null>(null);
+  // Fenêtre « Voulez-vous quitter l'application ? » (bouton retour du téléphone sur l'Accueil)
+  const [askExit, setAskExit] = useState(false);
   const { t, language } = useLanguage();
   const { progress } = useProgress();
   const isDebugUi = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debugUi');
@@ -31,6 +35,9 @@ function MainApp() {
 
   const goTo = (tab: Tab) => {
     setDetailId(null);
+    // Les réglages de départ du QCM ne servent qu'une fois : en quittant l'onglet, on les oublie.
+    // Sinon, après « Réviser ce nom », chaque retour dans l'onglet QCM relançait le QCM de ce seul nom.
+    if (tab !== 'qcm') setQcmPreset(null);
     setActiveTab(tab);
     window.scrollTo({ top: 0 });
   };
@@ -50,6 +57,21 @@ function MainApp() {
     setCardsStartId(id);
     goTo('flashcards');
   };
+
+  // Bouton retour du téléphone, quand aucun sous-écran n'est ouvert (voir src/lib/backButton.ts) :
+  // fiche d'un nom → liste ; autre onglet → Accueil ; Accueil → « Voulez-vous quitter l'application ? »
+  useAndroidBackButton(() => {
+    if (detailId !== null) {
+      setDetailId(null);
+      return true;
+    }
+    if (activeTab !== 'home') {
+      goTo('home');
+      return true;
+    }
+    setAskExit(true);
+    return true;
+  });
 
   const renderContent = () => {
     if (detailId !== null) {
@@ -92,7 +114,8 @@ function MainApp() {
           debugUi: dir={debugDir} | html.lang={debugHtmlLang} | ctx={language} | 99names_lang={debugAppLang} | legacy lang={debugLegacyLang}
         </div>
       )}
-      <header className="sticky top-0 z-50 bg-surface/85 backdrop-blur-md border-b border-line">
+      {/* pt-safe : l'en-tête commence sous l'heure et la batterie du téléphone, son fond passe derrière elles */}
+      <header className="sticky top-0 z-50 bg-surface/85 backdrop-blur-md border-b border-line pt-safe">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <button
             type="button"
@@ -162,6 +185,8 @@ function MainApp() {
           })}
         </div>
       </nav>
+
+      {askExit && <ExitDialog onQuit={exitApp} onStay={() => setAskExit(false)} />}
     </div>
   );
 }

@@ -203,6 +203,13 @@ export const translations = {
       linkLabel: "Soutenir l'app sur Buy Me a Coffee (s'ouvre dans un nouvel onglet)",
       dismiss: "Masquer"
     },
+    // Fenêtre affichée quand on appuie sur le bouton retour du téléphone depuis l'Accueil (app Android)
+    exitDialog: {
+      title: "Voulez-vous quitter l'application ?",
+      text: "Votre progression est enregistrée.",
+      yes: "Oui",
+      no: "Non"
+    },
     listNames: { ilmquest: "Liste Ajib.fr", tirmidhi: "Liste de Tirmidhî", all: "Les deux listes" },
     about: {
       title: "Pourquoi deux listes ?",
@@ -424,6 +431,12 @@ export const translations = {
       button: "Support the app",
       linkLabel: "Support the app on Buy Me a Coffee (opens in a new tab)",
       dismiss: "Hide"
+    },
+    exitDialog: {
+      title: "Do you want to quit the app?",
+      text: "Your progress is saved.",
+      yes: "Yes",
+      no: "No"
     },
     listNames: { ilmquest: "Ajib.fr list", tirmidhi: "Tirmidhi list", all: "Both lists" },
     about: {
