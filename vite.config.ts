@@ -16,6 +16,20 @@ export default defineConfig(({ mode }) => {
         // Polices et icônes mises en cache avec l'app : l'arabe s'affiche aussi hors ligne
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          // Audios des Noms (public/audio/noms) : pas téléchargés d'avance avec l'app (environ 2 Mo),
+          // mais gardés sur le téléphone dès qu'un Nom a été écouté une fois : ils marchent ensuite hors ligne.
+          // L'adresse contient ?v=<empreinte> : un fichier refait a une nouvelle adresse, c'est donc lui qui est chargé.
+          runtimeCaching: [
+            {
+              urlPattern: /\/audio\/noms\/\d+\.mp3/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'ilmquest-audio',
+                expiration: { maxEntries: 300 },
+                cacheableResponse: { statuses: [200] },
+              },
+            },
+          ],
         },
         manifest: {
           name: 'IlmQuest',

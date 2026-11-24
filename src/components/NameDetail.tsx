@@ -7,6 +7,8 @@ import { daysUntilReview, getLevel, getNameById, LEVEL_ORDER, positionInList } f
 import { useArabic } from '../lib/arabic';
 import { useActiveNames } from '../lib/activeNames';
 import { LIST_PILL } from '../lib/levelStyles';
+import { hasNameAudio } from '../lib/nameAudio';
+import AudioButton from './AudioButton';
 
 interface NameDetailProps {
   id: number;
@@ -78,6 +80,11 @@ export default function NameDetail({ id, onBack, onOpenName, onOpenCard, onRevie
         <p lang="ar" dir="rtl" className="relative arabic-text text-6xl font-bold text-on-hero">{arabic(name)}</p>
         <p className="relative mt-1 text-2xl font-extrabold text-on-hero">{name.transliteration}</p>
         <p className="relative text-lg font-semibold text-hero-muted">{name.meaning[language]}</p>
+        {hasNameAudio(name.id) && (
+          <div className="relative mt-4 flex justify-center">
+            <AudioButton id={name.id} label={name.transliteration} variant="hero" />
+          </div>
+        )}
       </section>
 
       {/* Listes qui contiennent ce nom : prévient l'utilisateur que les listes diffèrent.

@@ -12,6 +12,7 @@ import NamesList from './components/NamesList';
 import NameDetail from './components/NameDetail';
 import Settings from './components/Settings';
 import ExitDialog from './components/ExitDialog';
+import ListenBar from './components/ListenBar';
 import { exitApp, useAndroidBackButton } from './lib/backButton';
 import { QcmPreset, ReviewMode, Tab } from './types';
 
@@ -161,30 +162,34 @@ function MainApp() {
         </AnimatePresence>
       </main>
 
-      <nav
-        aria-label={t.navLabel}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-line pb-safe"
-      >
-        <div className="max-w-md mx-auto grid grid-cols-5 gap-1 px-2 pt-2">
-          {navItems.map(({ tab, label, Icon }) => {
-            const isActive = activeTab === tab && (tab === 'list' || detailId === null);
-            return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => goTo(tab)}
-                aria-current={isActive ? 'page' : undefined}
-                className={`flex flex-col items-center gap-1 py-2 rounded-2xl transition-colors ${
-                  isActive ? 'bg-soft text-soft-ink' : 'text-muted hover:text-ink'
-                }`}
-              >
-                <Icon size={22} />
-                <span className={`text-xs ${isActive ? 'font-extrabold' : 'font-bold'}`}>{label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+      {/* Bas de l'écran : la barre de lecture des noms (seulement pendant « Écouter tous les noms »), puis les onglets */}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <ListenBar />
+        <nav
+          aria-label={t.navLabel}
+          className="bg-surface border-t border-line pb-safe"
+        >
+          <div className="max-w-md mx-auto grid grid-cols-5 gap-1 px-2 pt-2">
+            {navItems.map(({ tab, label, Icon }) => {
+              const isActive = activeTab === tab && (tab === 'list' || detailId === null);
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => goTo(tab)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex flex-col items-center gap-1 py-2 rounded-2xl transition-colors ${
+                    isActive ? 'bg-soft text-soft-ink' : 'text-muted hover:text-ink'
+                  }`}
+                >
+                  <Icon size={22} />
+                  <span className={`text-xs ${isActive ? 'font-extrabold' : 'font-bold'}`}>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
 
       {askExit && <ExitDialog onQuit={exitApp} onStay={() => setAskExit(false)} />}
     </div>

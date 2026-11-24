@@ -86,6 +86,23 @@ export const translations = {
       toReview: "À revoir",
       iKnew: "Je le savais"
     },
+    // Audio des Noms : boutons « Écouter » (Liste, Cartes, fiche) et barre de lecture de la Liste
+    audio: {
+      listen: (name: string) => `Écouter ${name}`,
+      stop: "Arrêter le son",
+      listenButton: "Écouter",
+      listenAll: "Écouter tous les noms",
+      listenSome: (n: number) => `Écouter ${plural(n, "ce nom", `ces ${n} noms`)}`,
+      stopListening: "Arrêter l'écoute",
+      player: "Lecture des noms",
+      oneByOne: "Nom par nom",
+      previous: "Nom précédent",
+      next: "Nom suivant",
+      pause: "Pause",
+      play: "Lecture",
+      replay: "Réécouter",
+      close: "Fermer la lecture"
+    },
     qcm: {
       title: "QCM", subtitle: "Choisissez votre façon de réviser",
       start: "Démarrer le QCM",
@@ -314,6 +331,22 @@ export const translations = {
       flip: "Flip the card",
       toReview: "Review again",
       iKnew: "I knew it"
+    },
+    audio: {
+      listen: (name: string) => `Listen to ${name}`,
+      stop: "Stop the sound",
+      listenButton: "Listen",
+      listenAll: "Listen to all the names",
+      listenSome: (n: number) => `Listen to ${plural(n, "this name", `these ${n} names`)}`,
+      stopListening: "Stop listening",
+      player: "Names player",
+      oneByOne: "Name by name",
+      previous: "Previous name",
+      next: "Next name",
+      pause: "Pause",
+      play: "Play",
+      replay: "Listen again",
+      close: "Close the player"
     },
     qcm: {
       title: "Quiz", subtitle: "Choose how you want to review",

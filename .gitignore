@@ -6,3 +6,5 @@ coverage/
 *.log
 .env*
 !.env.example
+# Dossier de travail des audios (enregistrements, découpage, page d'écoute) : reste sur l'ordinateur
+audio-travail/

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Heart } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, Heart, Headphones, Square } from 'lucide-react';
 import { useProgress } from '../context/ProgressContext';
 import { useLanguage } from '../context/LanguageContext';
 import { countByLevel, getLevel } from '../lib/learning';
@@ -7,6 +7,8 @@ import { LEVEL_PILL, LIST_PILL } from '../lib/levelStyles';
 import { useActiveNames } from '../lib/activeNames';
 import { useArabic } from '../lib/arabic';
 import { matchesSearch } from '../lib/search';
+import { getNameAudioState, hasNameAudio, startListening, stopAudio, useNameAudio } from '../lib/nameAudio';
+import AudioButton from './AudioButton';
 
 type ListFilter = 'all' | 'mastered' | 'learning' | 'favorites';
 
@@ -21,6 +23,8 @@ export default function NamesList({ onOpenName }: NamesListProps) {
   const [filter, setFilter] = useState<ListFilter>('all');
   const arabic = useArabic();
   const { choice, names } = useActiveNames();
+  const audio = useNameAudio();
+  const isListening = audio.queue !== null;
 
   const { mastered, learning, toDiscover, total } = countByLevel(progress, names);
   // Numéro de chaque nom dans la liste suivie (sa place dans cette liste, pas son id)
@@ -36,6 +40,25 @@ export default function NamesList({ onOpenName }: NamesListProps) {
     if (filter === 'favorites') return progress.favorites.includes(name.id);
     return true;
   });
+
+  // « Écouter tous les noms » lit les noms affichés (recherche et filtre compris) qui ont un audio.
+  // Sans aucun audio validé, le bouton n'apparaît pas.
+  const audioIds = filteredNames.filter(name => hasNameAudio(name.id)).map(name => name.id);
+  const showsEveryName = audioIds.length === names.filter(name => hasNameAudio(name.id)).length;
+
+  // Pendant l'écoute, la liste défile pour garder le Nom en cours au milieu de l'écran
+  useEffect(() => {
+    if (!isListening || audio.currentId === null) return;
+    const row = document.getElementById(`name-row-${audio.currentId}`);
+    if (!row) return;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    row.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+  }, [isListening, audio.currentId]);
+
+  // En quittant la Liste (autre onglet, fiche d'un nom), l'écoute s'arrête
+  useEffect(() => () => {
+    if (getNameAudioState().queue !== null) stopAudio();
+  }, []);
 
   const filters: { id: ListFilter; label: string }[] = [
     { id: 'all', label: t.list.all(total) },
@@ -83,6 +106,19 @@ export default function NamesList({ onOpenName }: NamesListProps) {
         })}
       </div>
 
+      {audioIds.length > 0 && (
+        <button
+          type="button"
+          onClick={() => (isListening ? stopAudio() : startListening(audioIds))}
+          className={`flex items-center justify-center gap-2 w-full h-12 rounded-2xl font-extrabold transition-colors ${
+            isListening ? 'bg-track text-ink' : 'bg-soft text-soft-ink hover:bg-primary hover:text-on-primary'
+          }`}
+        >
+          {isListening ? <Square size={18} /> : <Headphones size={20} />}
+          {isListening ? t.audio.stopListening : showsEveryName ? t.audio.listenAll : t.audio.listenSome(audioIds.length)}
+        </button>
+      )}
+
       {filteredNames.length === 0 ? (
         <p className="px-1 py-10 text-center text-muted font-medium">
           {filter === 'favorites' && searchTerm === '' ? t.list.emptyFavorites : t.list.empty}
@@ -92,19 +128,28 @@ export default function NamesList({ onOpenName }: NamesListProps) {
           {filteredNames.map(name => {
             const level = getLevel(progress, name.id);
             const isFavorite = progress.favorites.includes(name.id);
+            // Nom en cours pendant « Écouter tous les noms » : ligne surlignée
+            const isCurrent = isListening && audio.currentId === name.id;
             return (
-              <li key={name.id}>
+              <li
+                key={name.id}
+                id={`name-row-${name.id}`}
+                aria-current={isCurrent ? 'true' : undefined}
+                className={`flex items-stretch rounded-2xl border transition-colors ${
+                  isCurrent ? 'bg-soft border-primary ring-2 ring-primary/30' : 'bg-surface border-line hover:border-primary/40'
+                }`}
+              >
                 <button
                   type="button"
                   onClick={() => onOpenName(name.id)}
-                  className="w-full flex items-center gap-3 min-h-[4.5rem] py-2.5 pl-2.5 pr-4 rounded-2xl bg-surface border border-line text-left hover:border-primary/40 transition-colors"
+                  className="flex-1 min-w-0 flex items-center gap-3 min-h-[4.5rem] py-2.5 pl-2.5 pr-4 rounded-2xl text-left"
                 >
                   <span className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl bg-ground text-sm font-extrabold text-muted">
                     #{positions.get(name.id)}
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-ink truncate">{name.transliteration}</span>
+                      <span className="font-extrabold text-ink min-w-0 break-words">{name.transliteration}</span>
                       {isFavorite && <Heart size={14} className="shrink-0 fill-danger text-danger" aria-hidden="true" />}
                       {/* Les deux listes réunies : on signale les noms qui n'appartiennent qu'à une liste */}
                       {choice === 'all' && name.lists.length === 1 && (
@@ -115,18 +160,24 @@ export default function NamesList({ onOpenName }: NamesListProps) {
                     </span>
                     <span className="block text-sm font-medium text-muted">{name.meaning[language]}</span>
                   </span>
-                  <span className="flex flex-col items-end gap-1 shrink-0">
-                    <span lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-arabic">{arabic(name)}</span>
+                  {/* max-w : un nom arabe très long (n° 85) passe sur deux lignes au lieu de recouvrir le texte à sa gauche */}
+                  <span className="flex flex-col items-end gap-1 shrink-0 max-w-[45%]">
+                    <span lang="ar" dir="rtl" className="arabic-text text-3xl font-bold text-arabic text-right">{arabic(name)}</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-extrabold ${LEVEL_PILL[level]}`}>
                       {t.levels[level]}
                     </span>
                   </span>
                 </button>
+                {/* Bouton « Écouter » : à côté de la ligne et non dedans (un bouton ne peut pas en contenir un autre) */}
+                <AudioButton id={name.id} label={name.transliteration} variant="row" />
               </li>
             );
           })}
         </ul>
       )}
+
+      {/* Pendant l'écoute, la barre de lecture couvre le bas de l'écran : de la place pour que les derniers noms restent visibles */}
+      {isListening && <div className="h-28" aria-hidden="true" />}
     </div>
   );
 }

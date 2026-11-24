@@ -8,6 +8,7 @@ import { FlashcardSide } from '../types';
 import { LEVEL_PILL } from '../lib/levelStyles';
 import { useArabic } from '../lib/arabic';
 import { useActiveNames } from '../lib/activeNames';
+import AudioButton from './AudioButton';
 
 interface FlashcardsProps {
   /** Nom à afficher en premier (depuis « Voir en carte » sur une fiche) */
@@ -140,35 +141,38 @@ export default function Flashcards({ startId = null }: FlashcardsProps) {
         </div>
       </div>
 
-      {/* Carte : toucher pour la retourner */}
-      <button
-        type="button"
-        onClick={() => setIsFlipped(!isFlipped)}
-        aria-label={t.cards.flip}
-        className="relative block w-full aspect-[4/3] perspective-1000"
-      >
-        <motion.div
-          className="w-full h-full relative preserve-3d"
-          initial={false}
-          animate={{ rotateY: isFlipped ? 180 : 0 }}
-          transition={{ duration: 0.5 }}
+      {/* Carte : toucher pour la retourner. Le bouton « Écouter » est posé dans son coin, sans tourner avec elle. */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsFlipped(!isFlipped)}
+          aria-label={t.cards.flip}
+          className="relative block w-full aspect-[4/3] perspective-1000"
         >
-          <div className="absolute inset-0 backface-hidden p-6 rounded-[1.75rem] bg-surface border border-line shadow-lg flex flex-col items-center justify-center text-center">
-            {renderSide(frontSide, false)}
-            <p className="absolute bottom-5 flex items-center gap-2 text-sm font-semibold text-muted">
-              <RotateCcw size={16} />
-              {t.cards.clickToFlip}
-            </p>
-          </div>
-          <div
-            className="absolute inset-0 backface-hidden p-6 rounded-[1.75rem] bg-hero shadow-lg flex flex-col items-center justify-center gap-2 text-center"
-            style={{ transform: 'rotateY(180deg)' }}
+          <motion.div
+            className="w-full h-full relative preserve-3d"
+            initial={false}
+            animate={{ rotateY: isFlipped ? 180 : 0 }}
+            transition={{ duration: 0.5 }}
           >
-            {renderSide(backSide, true)}
-            {extraSide && renderExtra(extraSide)}
-          </div>
-        </motion.div>
-      </button>
+            <div className="absolute inset-0 backface-hidden p-6 rounded-[1.75rem] bg-surface border border-line shadow-lg flex flex-col items-center justify-center text-center">
+              {renderSide(frontSide, false)}
+              <p className="absolute bottom-5 flex items-center gap-2 text-sm font-semibold text-muted">
+                <RotateCcw size={16} />
+                {t.cards.clickToFlip}
+              </p>
+            </div>
+            <div
+              className="absolute inset-0 backface-hidden p-6 rounded-[1.75rem] bg-hero shadow-lg flex flex-col items-center justify-center gap-2 text-center"
+              style={{ transform: 'rotateY(180deg)' }}
+            >
+              {renderSide(backSide, true)}
+              {extraSide && renderExtra(extraSide)}
+            </div>
+          </motion.div>
+        </button>
+        <AudioButton id={currentName.id} label={currentName.transliteration} variant="card" className="absolute top-3 right-3 z-10" />
+      </div>
 
       {/* Auto-évaluation */}
       <div className="grid grid-cols-2 gap-3">
