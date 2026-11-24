@@ -5,13 +5,18 @@
  * - Pour changer de lien : modifier SUPPORT_URL ci-dessous, c'est le seul endroit.
  * - Laisser SUPPORT_URL vide ('') masque l'encart partout.
  *
- * ⚠️ Avant de publier l'app sur le Play Store ou l'App Store : vérifier qu'un lien de don externe
- * est accepté par leurs règles de paiement (sinon l'app peut être refusée). Voir le Trello, phase 3.
+ * SITE WEB SEULEMENT (décidé le 24.11.2026) : l'encart n'apparaît que sur le site, ouvert dans un navigateur.
+ * Dans les apps Android et iPhone, il est masqué : Apple exige l'achat intégré pour les pourboires au développeur
+ * (des liens externes ont été refusés) et Google interdit d'envoyer vers un autre moyen de paiement.
+ * Plus tard, les apps des stores auront leur propre « Soutenir » par achat intégré.
  */
+import { Capacitor } from '@capacitor/core';
+
 export const SUPPORT_URL = 'https://buymeacoffee.com/QassimCoding';
 
-/** Vrai si un lien de soutien est renseigné */
+/** Vrai sur le site web quand un lien de soutien est renseigné ; toujours faux dans les apps Android et iPhone */
 export function isSupportEnabled(): boolean {
+  if (Capacitor.isNativePlatform()) return false;
   return SUPPORT_URL.trim() !== '';
 }
 
